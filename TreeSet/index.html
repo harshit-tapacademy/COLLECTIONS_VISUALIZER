@@ -136,6 +136,46 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .log-entry.log-nav{color:var(--accent-purple);background:var(--accent-purple-bg)}
 .log-entry.log-info{color:var(--text-muted)}
 
+/* ===== Theory Section ===== */
+.theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
+.theory-toggle:hover{background:rgba(255,255,255,0.02)}
+.theory-toggle h2{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-secondary)}
+.theory-toggle h2 .accent{color:var(--accent-red)}
+.toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
+.theory-section.open .toggle-chevron{transform:rotate(180deg)}
+.theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.theory-section.open .theory-body{max-height:3500px}
+.theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
+.theory-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.theory-card:hover{border-color:var(--border-glow)}
+.theory-card h3{font-size:0.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.theory-card h3 .icon{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.theory-card p,.theory-card li{font-size:0.76rem;color:var(--text-secondary);line-height:1.7}
+.theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+.theory-card .rule{display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border-subtle)}
+.theory-card .rule:last-child{border-bottom:none}
+.theory-card .rule-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;flex-shrink:0;font-family:var(--font-mono)}
+.theory-card .rule-text{font-size:0.74rem;color:var(--text-secondary);line-height:1.5}
+.rule-num.rn-red{background:var(--accent-red-bg);color:var(--accent-red);border:1px solid rgba(255,82,82,0.2)}
+.rule-num.rn-black{background:rgba(255,255,255,0.06);color:var(--text-primary);border:1px solid var(--border)}
+.theory-full{grid-column:1/-1}
+.complexity-table{width:100%;border-collapse:collapse;margin-top:8px}
+.complexity-table th,.complexity-table td{padding:8px 12px;font-size:0.72rem;text-align:left;border-bottom:1px solid var(--border-subtle)}
+.complexity-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.62rem;letter-spacing:0.08em}
+.complexity-table td{font-family:var(--font-mono);color:var(--text-primary);font-weight:600}
+.complexity-table td:first-child{font-family:var(--font);color:var(--text-secondary)}
+.complexity-table .good{color:var(--accent-green)}
+.complexity-table .warn{color:var(--accent-amber)}
+.complexity-table .bad{color:var(--accent-red)}
+.rotation-demo{display:flex;gap:12px;margin-top:10px;flex-wrap:wrap}
+.rotation-box{flex:1;min-width:140px;padding:12px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-md);text-align:center}
+.rotation-box .label{font-size:0.68rem;font-weight:700;color:var(--accent-amber);margin-bottom:6px;font-family:var(--font-mono)}
+.rotation-box .diagram{font-family:var(--font-mono);font-size:0.68rem;color:var(--text-secondary);line-height:1.5;white-space:pre}
+
 @media(max-width:900px){.header,.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
 @media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.node-circle{width:36px;height:36px;font-size:0.75rem}}
     </style>
@@ -187,6 +227,120 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
             <div class="speed-control">
                 <label>Speed</label>
                 <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+            </div>
+        </div>
+    </div>
+
+    <!-- Theory Section -->
+    <div class="theory-section" id="theorySection">
+        <button class="theory-toggle" id="theoryToggle" type="button">
+            <h2>📖 <span class="accent">What is a Red-Black Tree?</span> — BST Theory & RBT Rules</h2>
+            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="theory-body">
+            <div class="theory-inner">
+                <div class="theory-grid">
+                    <!-- BST Fundamentals -->
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-green-bg);color:var(--accent-green)">🌲</span> Binary Search Tree (BST)</h3>
+                        <p style="margin-bottom:10px">A <strong style="color:var(--text-primary)">Binary Search Tree</strong> is a node-based data structure where each node has at most two children. It enforces a strict ordering:</p>
+                        <ul>
+                            <li><strong style="color:var(--text-primary)">Left subtree</strong> — all values are <code>< parent</code></li>
+                            <li><strong style="color:var(--text-primary)">Right subtree</strong> — all values are <code>> parent</code></li>
+                            <li><strong style="color:var(--text-primary)">In-order traversal</strong> always produces <code>sorted output</code></li>
+                            <li>Search, insert, delete are <code>O(h)</code> where <strong style="color:var(--text-primary)">h = height</strong></li>
+                        </ul>
+                        <p style="margin-top:10px">⚠️ Problem: A plain BST can become <strong style="color:var(--accent-red)">degenerate</strong> (essentially a linked list) with sorted input, making all ops <code>O(n)</code> worst case!</p>
+                    </div>
+
+                    <!-- Red-Black Tree -->
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:rgba(229,57,53,0.1);color:#ef5350">🔴</span> Red-Black Tree — Self-Balancing BST</h3>
+                        <p style="margin-bottom:10px">A <strong style="color:var(--text-primary)">Red-Black Tree</strong> is a BST with an extra <strong style="color:var(--accent-red)">color bit</strong> per node (Red or Black) and specific rules that keep the tree approximately balanced, guaranteeing <code>O(log n)</code> for all operations.</p>
+                        <p style="margin-bottom:8px">Java's <code>TreeSet</code> and <code>TreeMap</code> are backed by a Red-Black Tree internally. It was invented by <strong style="color:var(--text-primary)">Rudolf Bayer</strong> (1972) and refined by <strong style="color:var(--text-primary)">Leonidas Guibas & Robert Sedgewick</strong> (1978).</p>
+                        <p>Unlike AVL trees, RBTs allow slightly less perfect balance in exchange for <strong style="color:var(--accent-green)">fewer rotations during insertions & deletions</strong>, making them ideal for write-heavy workloads.</p>
+                    </div>
+
+                    <!-- The 5 Rules -->
+                    <div class="theory-card theory-full">
+                        <h3><span class="icon" style="background:var(--accent-amber-bg);color:var(--accent-amber)">📜</span> The 5 Red-Black Tree Rules (Invariants)</h3>
+                        <div class="rule">
+                            <span class="rule-num rn-red">1</span>
+                            <span class="rule-text">Every node is either <strong style="color:var(--accent-red)">RED</strong> or <strong style="color:var(--text-primary)">BLACK</strong>.</span>
+                        </div>
+                        <div class="rule">
+                            <span class="rule-num rn-black">2</span>
+                            <span class="rule-text">The <strong style="color:var(--text-primary)">root</strong> is always <strong style="color:var(--text-primary)">BLACK</strong>. After every insert fix-up, we ensure <code>root.color = BLACK</code>.</span>
+                        </div>
+                        <div class="rule">
+                            <span class="rule-num rn-red">3</span>
+                            <span class="rule-text">Every leaf (<code>null</code> / NIL) is considered <strong style="color:var(--text-primary)">BLACK</strong>. These are implicit sentinel nodes.</span>
+                        </div>
+                        <div class="rule">
+                            <span class="rule-num rn-red">4</span>
+                            <span class="rule-text"><strong style="color:var(--accent-red)">No two consecutive RED nodes</strong> — if a node is RED, both its children must be BLACK. (No red-red parent-child pair)</span>
+                        </div>
+                        <div class="rule">
+                            <span class="rule-num rn-black">5</span>
+                            <span class="rule-text">Every path from a node to any of its descendant <code>null</code> leaves contains the <strong style="color:var(--text-primary)">same number of BLACK nodes</strong> (called <em>"black-height"</em>). This is the key balancing property!</span>
+                        </div>
+                    </div>
+
+                    <!-- Rotations -->
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-blue-bg);color:var(--accent-blue)">🔄</span> Rotations — The Balancing Tool</h3>
+                        <p style="margin-bottom:8px">When an insertion or deletion violates the RBT rules, the tree <strong style="color:var(--text-primary)">self-corrects</strong> using <strong style="color:var(--accent-amber)">rotations</strong> and <strong style="color:var(--accent-amber)">recoloring</strong>.</p>
+                        <div class="rotation-demo">
+                            <div class="rotation-box">
+                                <div class="label">Left Rotation</div>
+                                <div class="diagram">  x            y
+   \    →    /
+    y       x</div>
+                                <p style="font-size:0.64rem;color:var(--text-muted);margin-top:6px">x goes down-left, y goes up</p>
+                            </div>
+                            <div class="rotation-box">
+                                <div class="label">Right Rotation</div>
+                                <div class="diagram">    y        x
+   /    →    \
+  x            y</div>
+                                <p style="font-size:0.64rem;color:var(--text-muted);margin-top:6px">y goes down-right, x goes up</p>
+                            </div>
+                        </div>
+                        <p style="margin-top:10px">At most <code>2 rotations</code> for insert, <code>3 rotations</code> for delete. Recoloring may propagate up the tree.</p>
+                    </div>
+
+                    <!-- Complexity Comparison -->
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-purple-bg);color:var(--accent-purple)">⚡</span> Time Complexity Comparison</h3>
+                        <table class="complexity-table">
+                            <thead>
+                                <tr><th>Operation</th><th>BST (avg)</th><th>BST (worst)</th><th>Red-Black Tree</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Search</td><td class="good">O(log n)</td><td class="bad">O(n)</td><td class="good">O(log n)</td></tr>
+                                <tr><td>Insert</td><td class="good">O(log n)</td><td class="bad">O(n)</td><td class="good">O(log n)</td></tr>
+                                <tr><td>Delete</td><td class="good">O(log n)</td><td class="bad">O(n)</td><td class="good">O(log n)</td></tr>
+                                <tr><td>first() / last()</td><td class="good">O(log n)</td><td class="bad">O(n)</td><td class="good">O(log n)</td></tr>
+                                <tr><td>floor() / ceiling()</td><td class="good">O(log n)</td><td class="bad">O(n)</td><td class="good">O(log n)</td></tr>
+                                <tr><td>In-order traversal</td><td class="warn">O(n)</td><td class="warn">O(n)</td><td class="warn">O(n)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Java TreeSet Internals -->
+                    <div class="theory-card theory-full">
+                        <h3><span class="icon" style="background:rgba(255,145,0,0.1);color:#ff9100">☕</span> Java TreeSet Internals</h3>
+                        <p style="margin-bottom:8px">In Java, <code>TreeSet</code> is a wrapper around <code>TreeMap</code>. Each element is stored as a <strong style="color:var(--text-primary)">key</strong> in the internal <code>TreeMap</code> with a dummy value (<code>PRESENT</code>).</p>
+                        <ul>
+                            <li>Implements <code>NavigableSet</code> → <code>SortedSet</code> → <code>Set</code></li>
+                            <li>Elements must be <code>Comparable</code> or a <code>Comparator</code> must be provided</li>
+                            <li><strong style="color:var(--accent-red)">Rejects duplicates</strong> — <code>add()</code> returns <code>false</code> if element already exists</li>
+                            <li><strong style="color:var(--accent-red)">Does NOT allow null</strong> (throws <code>NullPointerException</code>)</li>
+                            <li><strong style="color:var(--accent-red)">Not thread-safe</strong> — use <code>Collections.synchronizedSortedSet()</code> or <code>ConcurrentSkipListSet</code></li>
+                            <li>Unlike <code>HashSet</code> (O(1) ops, unordered), TreeSet guarantees <strong style="color:var(--accent-green)">sorted order</strong> at the cost of <code>O(log n)</code> per operation</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -634,6 +788,11 @@ class RedBlackTree {
     sampleBtn.addEventListener('click', handleSample);
     clearLogBtn.addEventListener('click', () => { logContainer.innerHTML = ''; logMsg('Log cleared.', 'info'); });
     let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => fullRender(), 150); });
+
+    /* Theory section toggle */
+    const theorySection = $('theorySection'), theoryToggle = $('theoryToggle');
+    theoryToggle.addEventListener('click', () => theorySection.classList.toggle('open'));
+
     fullRender();
 })();
 </script>

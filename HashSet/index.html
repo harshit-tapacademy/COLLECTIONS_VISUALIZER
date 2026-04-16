@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='j' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f89820'/%3E%3Cstop offset='1' stop-color='%23e25303'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M24 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M32 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M12 30h34v8c0 14-34 14-34 0z' fill='url(%23j)'/%3E%3Cpath d='M46 33h6c6 0 6 10 0 10h-6' fill='none' stroke='url(%23j)' stroke-width='3'/%3E%3Cpath d='M8 52h48' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M14 56h36' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HashSet Visualizer — Hash Table with Bucket Array</title>
+    <meta name="description" content="Interactive hash table visualizer for Java HashSet. See bucket arrays, hash computation, collision chaining, load factor threshold, and rehashing.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+:root{
+    --bg-primary:#000;--bg-secondary:#0a0a0a;--bg-panel:#0d0d0d;
+    --border:rgba(255,255,255,0.06);--border-subtle:rgba(255,255,255,0.04);--border-glow:rgba(255,255,255,0.12);
+    --text-primary:#f0f0f0;--text-secondary:#8a8a8a;--text-muted:#555;
+    --accent-green:#4cff91;--accent-green-bg:rgba(76,255,145,0.10);
+    --accent-red:#ff5252;--accent-red-bg:rgba(255,82,82,0.08);
+    --accent-blue:#448aff;--accent-blue-bg:rgba(68,138,255,0.08);
+    --accent-amber:#ffc107;--accent-amber-bg:rgba(255,193,7,0.08);
+    --accent-purple:#b388ff;--accent-purple-bg:rgba(179,136,255,0.08);
+    --accent-cyan:#18ffff;--accent-cyan-bg:rgba(24,255,255,0.08);
+    --accent-teal:#64ffda;--accent-orange:#ff9100;
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--radius-full:999px;
+    --shadow-md:0 4px 16px rgba(0,0,0,0.6);
+    --font:'Inter',-apple-system,sans-serif;--font-mono:'JetBrains Mono','Fira Code',monospace;
+    --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.app{max-width:1440px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);flex-wrap:wrap;gap:16px;backdrop-filter:blur(20px)}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-icon{width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--accent-orange),var(--accent-amber));display:flex;align-items:center;justify-content:center;color:#000;box-shadow:0 0 24px rgba(255,145,0,0.3);transition:transform var(--transition)}
+.logo-icon:hover{transform:scale(1.08) rotate(-3deg)}
+.header h1{font-size:1.35rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{font-size:0.72rem;color:var(--text-muted);font-weight:500;margin-top:3px}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.formula-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-full);font-size:0.72rem;transition:all var(--transition)}
+.formula-badge:hover{background:rgba(255,255,255,0.06);border-color:var(--border-glow)}
+.formula-label{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.58rem;letter-spacing:0.1em}
+.formula-badge code{font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:0.72rem}
+
+/* Controls */
+.controls-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);gap:14px;flex-wrap:wrap;backdrop-filter:blur(20px)}
+.controls-left,.controls-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.input-group{display:flex;align-items:center;gap:0}
+.stepper-btn{width:36px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all var(--transition);font-size:1.1rem;font-weight:600;user-select:none}
+.stepper-btn:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.stepper-btn:hover{background:rgba(255,255,255,0.08);color:var(--text-primary)}
+.stepper-btn:active{transform:scale(0.95)}
+.input-group input{width:72px;padding:9px 8px;background:var(--bg-secondary);border:1px solid var(--border);border-left:none;border-right:none;color:var(--text-primary);font-family:var(--font-mono);font-size:0.9rem;font-weight:700;outline:none;text-align:center;transition:border-color var(--transition)}
+.input-group input:focus{border-color:var(--accent-blue)}
+.input-group input::placeholder{color:var(--text-muted);font-weight:400}
+.input-group input::-webkit-outer-spin-button,.input-group input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.input-group input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;font-family:var(--font);font-size:0.78rem;font-weight:600;border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);white-space:nowrap;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%);pointer-events:none;opacity:0;transition:opacity var(--transition)}
+.btn:hover::after{opacity:1}
+.btn:active{transform:scale(0.96)}
+.btn:disabled{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.btn-add{background:var(--accent-green);color:#000;font-weight:700;border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.btn-add:hover{box-shadow:0 0 20px rgba(76,255,145,0.25)}
+.btn-remove{background:var(--accent-red-bg);color:var(--accent-red);border:1px solid rgba(255,82,82,0.2)}
+.btn-remove:hover{box-shadow:0 0 20px rgba(255,82,82,0.25)}
+.btn-contains{background:var(--accent-amber-bg);color:var(--accent-amber);border:1px solid rgba(255,193,7,0.2)}
+.btn-contains:hover{box-shadow:0 0 20px rgba(255,193,7,0.25)}
+.btn-clear{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border)}
+.btn-clear:hover{color:var(--text-secondary);background:rgba(255,255,255,0.06)}
+.btn-sample{background:linear-gradient(135deg,var(--accent-orange),var(--accent-amber));color:#000;padding:9px 18px;font-weight:700}
+.btn-sample:hover{box-shadow:0 0 24px rgba(255,145,0,0.3);filter:brightness(1.15)}
+.btn-clear-log{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border);padding:5px 12px;font-size:0.7rem}
+.speed-control{display:flex;align-items:center;gap:7px}
+.speed-control label{font-size:0.7rem;color:var(--text-muted);font-weight:600}
+.speed-control input[type="range"]{width:64px;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.08);border-radius:2px;outline:none}
+.speed-control input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent-blue);cursor:pointer;box-shadow:0 0 8px rgba(68,138,255,0.4)}
+
+/* Panels */
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-subtle);background:rgba(255,255,255,0.01);flex-wrap:wrap;gap:8px}
+.panel-header h2{font-size:0.82rem;font-weight:700;color:var(--text-secondary)}
+.badge{font-size:0.68rem;font-weight:600;padding:4px 12px;border-radius:var(--radius-full);border:1px solid}
+.badge-blue{background:var(--accent-blue-bg);color:var(--accent-blue);border-color:rgba(68,138,255,0.15)}
+.badge-green{background:var(--accent-green-bg);color:var(--accent-green);border-color:rgba(76,255,145,0.15)}
+.badge-amber{background:var(--accent-amber-bg);color:var(--accent-amber);border-color:rgba(255,193,7,0.15)}
+.badge-orange{background:rgba(255,145,0,0.08);color:var(--accent-orange);border-color:rgba(255,145,0,0.15)}
+
+/* Load Factor Bar */
+.lf-bar-wrap{margin:0 20px 16px;display:flex;flex-direction:column;gap:6px}
+.lf-info{display:flex;justify-content:space-between;font-size:0.68rem;font-weight:600;color:var(--text-muted)}
+.lf-info strong{color:var(--text-secondary)}
+.lf-track{height:8px;background:rgba(255,255,255,0.04);border-radius:4px;overflow:hidden;position:relative}
+.lf-fill{height:100%;border-radius:4px;transition:width 0.5s ease,background 0.3s ease;background:linear-gradient(90deg,var(--accent-green),var(--accent-teal))}
+.lf-fill.warn{background:linear-gradient(90deg,var(--accent-amber),var(--accent-orange))}
+.lf-fill.critical{background:linear-gradient(90deg,var(--accent-red),#ff1744)}
+.lf-threshold{position:absolute;top:-1px;bottom:-1px;width:2px;background:var(--accent-amber);border-radius:1px;opacity:0.7}
+
+/* Hash Computation Display */
+.hash-display{padding:12px 20px;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-secondary);border-top:1px solid var(--border-subtle);min-height:40px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hash-display .hl{color:var(--accent-cyan);font-weight:700}
+.hash-display .op{color:var(--text-muted)}
+.hash-display .result{color:var(--accent-green);font-weight:700}
+
+/* Bucket Table */
+.bucket-viewport{padding:20px;overflow-x:auto}
+.bucket-grid{display:flex;gap:6px;min-width:fit-content;align-items:flex-start}
+.bucket-col{display:flex;flex-direction:column;align-items:center;gap:0;min-width:72px}
+.bucket-idx{font-family:var(--font-mono);font-size:0.6rem;font-weight:700;color:var(--text-muted);padding:4px 0;text-align:center}
+.bucket-slot{width:72px;min-height:44px;border:1.5px solid rgba(255,255,255,0.08);border-radius:8px;background:rgba(255,255,255,0.02);display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:0;transition:all 0.3s ease;padding:0;overflow:hidden}
+.bucket-slot.empty{border-style:dashed;opacity:0.5}
+.bucket-slot.hl-target{border-color:rgba(76,255,145,0.5);background:rgba(76,255,145,0.04);box-shadow:0 0 12px rgba(76,255,145,0.15)}
+.bucket-slot.hl-search{border-color:rgba(255,193,7,0.5);background:rgba(255,193,7,0.04);box-shadow:0 0 12px rgba(255,193,7,0.15)}
+.bucket-slot.hl-remove{border-color:rgba(255,82,82,0.5);background:rgba(255,82,82,0.04)}
+
+/* Chain nodes */
+.chain-node{width:100%;padding:8px 4px;text-align:center;font-family:var(--font-mono);font-size:0.8rem;font-weight:700;color:var(--text-primary);border-bottom:1px solid rgba(255,255,255,0.04);transition:all 0.3s ease;position:relative}
+.chain-node:last-child{border-bottom:none}
+.chain-node.hl-add{background:rgba(76,255,145,0.12);color:var(--accent-green);animation:nodeFlash .5s ease}
+.chain-node.hl-found{background:rgba(255,193,7,0.12);color:var(--accent-amber)}
+.chain-node.hl-remove{background:rgba(255,82,82,0.12);color:var(--accent-red);opacity:0.6}
+.chain-node.hl-traverse{background:rgba(68,138,255,0.08);color:var(--accent-blue)}
+.chain-arrow{width:100%;display:flex;justify-content:center;padding:0;line-height:1;font-size:0.5rem;color:var(--text-muted);opacity:0.4}
+@keyframes nodeFlash{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+
+/* Rehash overlay */
+.rehash-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.3s ease}
+.rehash-overlay.active{opacity:1;pointer-events:auto}
+.rehash-msg{padding:28px 40px;background:var(--bg-panel);border:1px solid rgba(255,145,0,0.3);border-radius:var(--radius-xl);text-align:center;box-shadow:0 0 40px rgba(255,145,0,0.15)}
+.rehash-msg h3{font-size:1.1rem;font-weight:800;color:var(--accent-orange);margin-bottom:8px}
+.rehash-msg p{font-size:0.82rem;color:var(--text-secondary)}
+
+/* Info Bar */
+.info-bar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-secondary);min-height:48px;transition:all 0.3s ease;backdrop-filter:blur(20px)}
+.info-bar.action-add{border-color:rgba(76,255,145,0.2);background:rgba(76,255,145,0.03)}
+.info-bar.action-remove{border-color:rgba(255,82,82,0.2);background:rgba(255,82,82,0.03)}
+.info-bar.action-search{border-color:rgba(255,193,7,0.2);background:rgba(255,193,7,0.03)}
+.info-bar.action-rehash{border-color:rgba(255,145,0,0.2);background:rgba(255,145,0,0.03)}
+.info-text{font-weight:500;line-height:1.5}
+.info-text strong{color:var(--text-primary);font-weight:700}
+
+/* Log */
+.log-panel{max-height:220px}
+.log-container{padding:10px 16px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.log-container::-webkit-scrollbar{width:3px}
+.log-container::-webkit-scrollbar-track{background:transparent}
+.log-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.log-entry{font-family:var(--font-mono);font-size:0.68rem;padding:4px 10px;border-radius:var(--radius-sm);line-height:1.6}
+.log-entry.log-add{color:var(--accent-green);background:var(--accent-green-bg)}
+.log-entry.log-remove{color:var(--accent-red);background:var(--accent-red-bg)}
+.log-entry.log-search{color:var(--accent-amber);background:var(--accent-amber-bg)}
+.log-entry.log-rehash{color:var(--accent-orange);background:rgba(255,145,0,0.08)}
+.log-entry.log-info{color:var(--text-muted)}
+
+@media(max-width:900px){.header,.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
+@media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.bucket-col{min-width:56px}.bucket-slot{width:56px}.chain-node{font-size:0.7rem;padding:6px 2px}}
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+            </div>
+            <div>
+                <h1>HashSet Visualizer</h1>
+                <p class="subtitle">Java Collections — Hash Table with Separate Chaining</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="formula-badge"><span class="formula-label">Bucket</span><code>hash(e) & (n-1)</code></div>
+            <div class="formula-badge"><span class="formula-label">Load Factor</span><code>0.75</code></div>
+            <div class="formula-badge"><span class="formula-label">Avg</span><code>O(1)</code></div>
+        </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="controls-bar">
+        <div class="controls-left">
+            <div class="input-group">
+                <button class="stepper-btn" id="decBtn" type="button">−</button>
+                <input type="number" id="valueInput" placeholder="val" min="-999" max="999">
+                <button class="stepper-btn" id="incBtn" type="button" style="border-radius:0">+</button>
+                <button id="addBtn" class="btn btn-add">add(e)</button>
+            </div>
+            <button id="removeBtn" class="btn btn-remove">remove(e)</button>
+            <button id="containsBtn" class="btn btn-contains">contains(e)</button>
+            <button id="clearBtn" class="btn btn-clear">Clear</button>
+        </div>
+        <div class="controls-right">
+            <button id="sampleBtn" class="btn btn-sample">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Load Example
+            </button>
+            <div class="speed-control"><label>Speed</label><input type="range" id="speedSlider" min="1" max="5" value="3" step="1"></div>
+        </div>
+    </div>
+
+    <!-- Bucket Table Panel -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2>#️⃣ Bucket Array (Hash Table)</h2>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <span class="badge badge-orange" id="capLabel">capacity: 16</span>
+                <span class="badge badge-blue" id="sizeLabel">size: 0</span>
+                <span class="badge badge-amber" id="lfLabel">load: 0.00</span>
+            </div>
+        </div>
+        <div class="lf-bar-wrap">
+            <div class="lf-info">
+                <span>Load Factor: <strong id="lfValue">0.00 / 0.75</strong></span>
+                <span>Threshold: <strong id="threshValue">12</strong></span>
+            </div>
+            <div class="lf-track">
+                <div class="lf-fill" id="lfFill" style="width:0%"></div>
+                <div class="lf-threshold" id="lfThresh" style="left:75%"></div>
+            </div>
+        </div>
+        <div class="hash-display" id="hashDisplay">
+            <span class="op">Ready — hash computation will appear here</span>
+        </div>
+        <div class="bucket-viewport" id="bucketViewport">
+            <div class="bucket-grid" id="bucketGrid"></div>
+        </div>
+    </div>
+
+    <!-- Info Bar -->
+    <div class="info-bar" id="infoBar">
+        <div>ℹ️</div>
+        <div class="info-text" id="infoText">Ready. Add elements or load the example.</div>
+    </div>
+
+    <!-- Log -->
+    <div class="panel log-panel">
+        <div class="panel-header">
+            <h2>📋 Operation Log</h2>
+            <button id="clearLogBtn" class="btn btn-clear-log">Clear</button>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">Visualizer ready. HashSet backed by HashMap (bucket array + separate chaining).</div>
+        </div>
+    </div>
+</div>
+
+<!-- Rehash Overlay -->
+<div class="rehash-overlay" id="rehashOverlay">
+    <div class="rehash-msg">
+        <h3>🔄 Rehashing...</h3>
+        <p id="rehashText">Doubling capacity and redistributing all elements.</p>
+    </div>
+</div>
+
+<script>
+/* ===== SimHashSet — simplified Java HashSet internals ===== */
+class SimHashSet {
+    constructor() {
+        this.capacity = 16;
+        this.loadFactor = 0.75;
+        this.buckets = new Array(this.capacity).fill(null).map(() => []);
+        this._size = 0;
+    }
+
+    get size() { return this._size; }
+    get threshold() { return Math.floor(this.capacity * this.loadFactor); }
+    get currentLoadFactor() { return this._size / this.capacity; }
+
+    _hash(val) {
+        // Simplified spread hash like Java's HashMap
+        let h = val | 0;
+        h = h ^ (h >>> 16);
+        return h;
+    }
+
+    _bucketIndex(val) {
+        return (this._hash(val) & (this.capacity - 1));
+    }
+
+    add(val) {
+        const idx = this._bucketIndex(val);
+        const bucket = this.buckets[idx];
+        // Check for duplicate
+        for (let i = 0; i < bucket.length; i++) {
+            if (bucket[i] === val) return { added: false, idx, chainPos: i, rehashed: false };
+        }
+        bucket.push(val);
+        this._size++;
+        // Check if rehash needed
+        if (this._size > this.threshold) {
+            const oldCap = this.capacity;
+            this._rehash();
+            const newIdx = this._bucketIndex(val);
+            const newChainPos = this.buckets[newIdx].indexOf(val);
+            return { added: true, idx, chainPos: bucket.length - 1, rehashed: true, oldCap, newCap: this.capacity, newIdx, newChainPos };
+        }
+        return { added: true, idx, chainPos: bucket.length - 1, rehashed: false };
+    }
+
+    remove(val) {
+        const idx = this._bucketIndex(val);
+        const bucket = this.buckets[idx];
+        for (let i = 0; i < bucket.length; i++) {
+            if (bucket[i] === val) {
+                bucket.splice(i, 1);
+                this._size--;
+                return { removed: true, idx, chainPos: i };
+            }
+        }
+        return { removed: false, idx };
+    }
+
+    contains(val) {
+        const idx = this._bucketIndex(val);
+        const bucket = this.buckets[idx];
+        for (let i = 0; i < bucket.length; i++) {
+            if (bucket[i] === val) return { found: true, idx, chainPos: i };
+        }
+        return { found: false, idx };
+    }
+
+    _rehash() {
+        const oldBuckets = this.buckets;
+        this.capacity *= 2;
+        this.buckets = new Array(this.capacity).fill(null).map(() => []);
+        this._size = 0;
+        for (const bucket of oldBuckets) {
+            for (const val of bucket) {
+                const idx = this._bucketIndex(val);
+                this.buckets[idx].push(val);
+                this._size++;
+            }
+        }
+    }
+
+    clear() {
+        this.capacity = 16;
+        this.buckets = new Array(this.capacity).fill(null).map(() => []);
+        this._size = 0;
+    }
+
+    allElements() {
+        const all = [];
+        for (const b of this.buckets) all.push(...b);
+        return all;
+    }
+}
+
+/* ===== Visualizer ===== */
+(function() {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const decBtn=$('decBtn'),incBtn=$('incBtn'),valueInput=$('valueInput');
+    const addBtn=$('addBtn'),removeBtn=$('removeBtn'),containsBtn=$('containsBtn');
+    const clearBtn=$('clearBtn'),sampleBtn=$('sampleBtn'),clearLogBtn=$('clearLogBtn'),speedSlider=$('speedSlider');
+    const bucketGrid=$('bucketGrid'),hashDisplay=$('hashDisplay');
+    const infoBar=$('infoBar'),infoText=$('infoText'),logContainer=$('logContainer');
+    const capLabel=$('capLabel'),sizeLabel=$('sizeLabel'),lfLabel=$('lfLabel');
+    const lfValue=$('lfValue'),threshValue=$('threshValue'),lfFill=$('lfFill'),lfThresh=$('lfThresh');
+    const rehashOverlay=$('rehashOverlay'),rehashText=$('rehashText');
+    const allBtns=[addBtn,removeBtn,containsBtn,clearBtn,sampleBtn];
+
+    let hs = new SimHashSet();
+    let animating = false;
+
+    function getDelay(){const s=[1200,800,550,350,200];return s[parseInt(speedSlider.value)-1]||550}
+    function setAnimating(v){animating=v;allBtns.forEach(b=>b.disabled=v);updateBtns()}
+    function updateBtns(){[removeBtn,containsBtn].forEach(b=>b.disabled=animating||hs.size===0)}
+    function logMsg(msg,type='info'){const e=document.createElement('div');e.className=`log-entry log-${type}`;const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});e.textContent=`[${t}] ${msg}`;logContainer.appendChild(e);logContainer.scrollTop=logContainer.scrollHeight}
+    function setInfo(msg,cls=''){infoText.innerHTML=msg;infoBar.className='info-bar'+(cls?` action-${cls}`:'')}
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+    function updateStats() {
+        capLabel.textContent = `capacity: ${hs.capacity}`;
+        sizeLabel.textContent = `size: ${hs.size}`;
+        const lf = hs.currentLoadFactor;
+        lfLabel.textContent = `load: ${lf.toFixed(2)}`;
+        lfValue.textContent = `${lf.toFixed(2)} / ${hs.loadFactor}`;
+        threshValue.textContent = hs.threshold;
+        const pct = Math.min((lf / 1.0) * 100, 100);
+        lfFill.style.width = pct + '%';
+        lfFill.className = 'lf-fill' + (lf > 0.9 ? ' critical' : lf > 0.6 ? ' warn' : '');
+        lfThresh.style.left = (hs.loadFactor * 100) + '%';
+    }
+
+    function showHash(val) {
+        const h = hs._hash(val);
+        const idx = h & (hs.capacity - 1);
+        hashDisplay.innerHTML = `<span class="hl">${val}</span> <span class="op">→ hash =</span> <span class="hl">${h}</span> <span class="op">→</span> <span class="hl">${h}</span> <span class="op">&amp; ${hs.capacity - 1} =</span> <span class="result">bucket[${idx}]</span>`;
+    }
+
+    /* ===== Render Buckets ===== */
+    function renderBuckets(hlBucket = -1, hlType = '', hlChainPos = -1) {
+        let html = '';
+        for (let i = 0; i < hs.capacity; i++) {
+            const bucket = hs.buckets[i];
+            const isHl = i === hlBucket;
+            let slotCls = bucket.length === 0 ? 'empty' : '';
+            if (isHl) slotCls += ` hl-${hlType}`;
+            html += `<div class="bucket-col"><div class="bucket-idx">[${i}]</div><div class="bucket-slot ${slotCls}">`;
+            if (bucket.length === 0) {
+                html += `<div class="chain-node" style="color:var(--text-muted);opacity:0.3;font-size:0.6rem">—</div>`;
+            } else {
+                for (let j = 0; j < bucket.length; j++) {
+                    let nodeCls = '';
+                    if (isHl && j === hlChainPos) nodeCls = `hl-${hlType === 'target' ? 'add' : hlType === 'search' ? 'found' : 'remove'}`;
+                    else if (isHl && hlChainPos === -1) nodeCls = `hl-traverse`;
+                    html += `<div class="chain-node ${nodeCls}">${bucket[j]}</div>`;
+                    if (j < bucket.length - 1) html += `<div class="chain-arrow">▼</div>`;
+                }
+            }
+            html += '</div></div>';
+        }
+        bucketGrid.innerHTML = html;
+        updateStats();
+    }
+
+    /* ===== Handlers ===== */
+    function getVal(){const v=parseInt(valueInput.value);if(isNaN(v)){setInfo('⚠️ Enter a valid integer.','');return null}return v}
+
+    async function handleAdd(){
+        const v=getVal();if(v===null)return;
+        setAnimating(true);
+        showHash(v);
+        const d=getDelay();
+        // Show target bucket
+        const targetIdx = hs._bucketIndex(v);
+        renderBuckets(targetIdx, 'target');
+        setInfo(`🔍 Computing hash for <strong>${v}</strong> → bucket[<strong>${targetIdx}</strong>]`, 'add');
+        await sleep(d);
+
+        const result = hs.add(v);
+        if (!result.added) {
+            renderBuckets(result.idx, 'search', result.chainPos);
+            setInfo(`⚠️ <strong>${v}</strong> already exists in bucket[${result.idx}]. Set does not allow duplicates.`, 'search');
+            logMsg(`add(${v}) → false (duplicate)`, 'search');
+            await sleep(d);
+            renderBuckets(); setAnimating(false); return;
+        }
+
+        if (result.rehashed) {
+            // Show rehash
+            rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}. Redistributing ${hs.size} elements.`;
+            rehashOverlay.classList.add('active');
+            logMsg(`Rehash! capacity ${result.oldCap} → ${result.newCap}`, 'rehash');
+            setInfo(`🔄 <strong>Rehash triggered!</strong> Size ${hs.size} exceeded threshold ${Math.floor(result.oldCap * 0.75)}. Capacity: ${result.oldCap} → <strong>${result.newCap}</strong>`, 'rehash');
+            await sleep(d * 2);
+            rehashOverlay.classList.remove('active');
+            showHash(v);
+            renderBuckets(result.newIdx, 'target', result.newChainPos);
+            logMsg(`add(${v}) → true. bucket[${result.newIdx}]. size=${hs.size}`, 'add');
+        } else {
+            renderBuckets(result.idx, 'target', result.chainPos);
+            const collision = hs.buckets[result.idx].length > 1;
+            logMsg(`add(${v}) → true. bucket[${result.idx}]${collision ? ' (collision! chain length='+hs.buckets[result.idx].length+')' : ''}. size=${hs.size}`, 'add');
+            setInfo(`✅ <strong>add(${v})</strong> → bucket[<strong>${result.idx}</strong>]${collision ? ' ⚡ <strong>Collision!</strong> Chained at position ' + result.chainPos : ''}. Size: <strong>${hs.size}</strong>`, 'add');
+        }
+        await sleep(d);
+        renderBuckets(); valueInput.value=''; valueInput.focus(); setAnimating(false);
+    }
+
+    async function handleRemove(){
+        const v=getVal();if(v===null)return;
+        setAnimating(true);
+        showHash(v);
+        const d=getDelay();
+        const targetIdx = hs._bucketIndex(v);
+        renderBuckets(targetIdx, 'search');
+        setInfo(`🔍 Searching bucket[<strong>${targetIdx}</strong>] for <strong>${v}</strong>...`, 'search');
+        await sleep(d);
+
+        // Walk chain
+        const bucket = hs.buckets[targetIdx];
+        let foundPos = -1;
+        for (let i = 0; i < bucket.length; i++) {
+            renderBuckets(targetIdx, 'search', i);
+            await sleep(d * 0.3);
+            if (bucket[i] === v) { foundPos = i; break; }
+        }
+
+        if (foundPos === -1) {
+            setInfo(`⚠️ <strong>${v}</strong> not found in bucket[${targetIdx}].`, 'search');
+            logMsg(`remove(${v}) → false`, 'search');
+            await sleep(d);
+            renderBuckets(); setAnimating(false); return;
+        }
+
+        renderBuckets(targetIdx, 'remove', foundPos);
+        setInfo(`🗑️ Found <strong>${v}</strong> at bucket[${targetIdx}], chain position ${foundPos}. Removing...`, 'remove');
+        await sleep(d);
+
+        hs.remove(v);
+        logMsg(`remove(${v}) → true. size=${hs.size}`, 'remove');
+        setInfo(`🗑️ <strong>remove(${v})</strong> — removed from bucket[${targetIdx}]. Size: <strong>${hs.size}</strong>`, 'remove');
+        renderBuckets(); valueInput.value=''; valueInput.focus(); setAnimating(false);
+    }
+
+    async function handleContains(){
+        const v=getVal();if(v===null)return;
+        setAnimating(true);
+        showHash(v);
+        const d=getDelay();
+        const targetIdx = hs._bucketIndex(v);
+        renderBuckets(targetIdx, 'search');
+        setInfo(`🔍 Searching bucket[<strong>${targetIdx}</strong>] for <strong>${v}</strong>...`, 'search');
+        await sleep(d);
+
+        // Walk chain
+        const bucket = hs.buckets[targetIdx];
+        let foundPos = -1;
+        for (let i = 0; i < bucket.length; i++) {
+            renderBuckets(targetIdx, 'search', i);
+            await sleep(d * 0.3);
+            if (bucket[i] === v) { foundPos = i; break; }
+        }
+
+        if (foundPos >= 0) {
+            renderBuckets(targetIdx, 'search', foundPos);
+            setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>. Found in bucket[${targetIdx}], chain position ${foundPos}.`, 'search');
+            logMsg(`contains(${v}) → true`, 'search');
+        } else {
+            setInfo(`❌ <strong>contains(${v})</strong> → <strong>false</strong>. Not in bucket[${targetIdx}].`, 'search');
+            logMsg(`contains(${v}) → false`, 'search');
+        }
+        await sleep(d * 1.5);
+        renderBuckets(); setAnimating(false);
+    }
+
+    function handleClear(){
+        hs.clear();
+        hashDisplay.innerHTML = '<span class="op">Ready — hash computation will appear here</span>';
+        logMsg('clear()', 'info');
+        setInfo('🧹 HashSet cleared. Capacity reset to 16.', '');
+        renderBuckets();
+    }
+
+    async function handleSample(){
+        hs.clear(); renderBuckets();
+        setAnimating(true);
+        const vals = [5, 21, 37, 12, 8, 28, 15, 42, 3, 19];
+        logMsg(`Loading: add(${vals.join(', ')})`, 'info');
+        const d = getDelay();
+        for (const v of vals) {
+            showHash(v);
+            const result = hs.add(v);
+            if (result.rehashed) {
+                rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}`;
+                rehashOverlay.classList.add('active');
+                logMsg(`Rehash! ${result.oldCap} → ${result.newCap}`, 'rehash');
+                await sleep(d);
+                rehashOverlay.classList.remove('active');
+                showHash(v);
+                renderBuckets(result.newIdx, 'target', result.newChainPos);
+            } else {
+                renderBuckets(result.idx, 'target', result.chainPos);
+            }
+            logMsg(`add(${v}) → bucket[${result.rehashed ? result.newIdx : result.idx}]`, 'add');
+            await sleep(d * 0.4);
+            renderBuckets();
+            await sleep(60);
+        }
+        setInfo(`✅ Loaded: {${hs.allElements().join(', ')}}. Try <strong>contains(21)</strong> or <strong>add(5)</strong> for duplicate check!`, 'add');
+        renderBuckets(); setAnimating(false);
+    }
+
+    /* Events */
+    decBtn.addEventListener('click',()=>{const v=parseInt(valueInput.value)||0;valueInput.value=v-1});
+    incBtn.addEventListener('click',()=>{const v=parseInt(valueInput.value)||0;valueInput.value=v+1});
+    valueInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!animating)handleAdd()});
+    addBtn.addEventListener('click',handleAdd);
+    removeBtn.addEventListener('click',handleRemove);
+    containsBtn.addEventListener('click',handleContains);
+    clearBtn.addEventListener('click',handleClear);
+    sampleBtn.addEventListener('click',handleSample);
+    clearLogBtn.addEventListener('click',()=>{logContainer.innerHTML='';logMsg('Log cleared.','info')});
+
+    renderBuckets();
+})();
+</script>
+</body>
+</html>
