@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArrayDeque Visualizer — Circular Buffer</title>
+    <meta name="description" content="Interactive circular buffer visualizer for Java ArrayDeque. Animated Deque, Queue, and Stack operations with ring and array views.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+/* ===== Design System — Pure Black Premium ===== */
+:root {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-panel: #0d0d0d;
+    --bg-panel-hover: #161616;
+    --bg-elevated: #111111;
+    --border: rgba(255,255,255,0.06);
+    --border-subtle: rgba(255,255,255,0.04);
+    --border-glow: rgba(255,255,255,0.12);
+    --text-primary: #f0f0f0;
+    --text-secondary: #8a8a8a;
+    --text-muted: #555555;
+    --accent-green: #4cff91;
+    --accent-green-bg: rgba(76,255,145,0.10);
+    --accent-red: #ff5252;
+    --accent-red-bg: rgba(255,82,82,0.08);
+    --accent-blue: #448aff;
+    --accent-blue-bg: rgba(68,138,255,0.08);
+    --accent-amber: #ffc107;
+    --accent-amber-bg: rgba(255,193,7,0.08);
+    --accent-purple: #b388ff;
+    --accent-purple-bg: rgba(179,136,255,0.08);
+    --accent-cyan: #18ffff;
+    --accent-cyan-bg: rgba(24,255,255,0.08);
+    --accent-teal: #64ffda;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 999px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.7);
+    --shadow-glow-green: 0 0 24px rgba(76,255,145,0.25);
+    --shadow-glow-blue: 0 0 24px rgba(68,138,255,0.25);
+    --shadow-glow-amber: 0 0 24px rgba(255,193,7,0.3);
+    --shadow-glow-red: 0 0 24px rgba(255,82,82,0.25);
+    --shadow-glow-purple: 0 0 24px rgba(179,136,255,0.25);
+    --shadow-glow-cyan: 0 0 24px rgba(24,255,255,0.25);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+.app { max-width: 1400px; margin: 0 auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ===== Header ===== */
+.header { display: flex; align-items: center; justify-content: space-between; padding: 20px 28px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-xl); flex-wrap: wrap; gap: 16px; backdrop-filter: blur(20px); }
+.header-left { display: flex; align-items: center; gap: 16px; }
+.logo-icon { width: 48px; height: 48px; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); display: flex; align-items: center; justify-content: center; color: white; box-shadow: var(--shadow-glow-cyan); transition: transform var(--transition); }
+.logo-icon:hover { transform: scale(1.08) rotate(-3deg); }
+.header h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.subtitle { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; margin-top: 3px; letter-spacing: 0.02em; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.formula-badge { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 0.72rem; transition: border-color var(--transition), background var(--transition); }
+.formula-badge:hover { background: rgba(255,255,255,0.06); border-color: var(--border-glow); }
+.formula-label { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.1em; }
+.formula-badge code { font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 600; font-size: 0.72rem; }
+
+/* ===== Mode Tabs ===== */
+.mode-bar { display: flex; align-items: center; gap: 6px; padding: 6px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-xl); backdrop-filter: blur(20px); }
+.mode-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 10px 18px; border: none; border-radius: var(--radius-lg); background: transparent; color: var(--text-muted); font-family: var(--font); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all var(--transition); position: relative; }
+.mode-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.03); }
+.mode-tab.active { color: var(--text-primary); background: rgba(255,255,255,0.06); border: 1px solid var(--border-glow); }
+.mode-tab .mode-tag { font-size: 0.55rem; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: 0.08em; }
+.mode-tab.active .mode-tag { background: var(--accent-blue-bg); color: var(--accent-blue); }
+
+/* ===== Controls ===== */
+.controls-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-xl); gap: 14px; flex-wrap: wrap; backdrop-filter: blur(20px); }
+.controls-left, .controls-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.input-group { display: flex; align-items: center; gap: 0; }
+.stepper-btn { width: 36px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; transition: all var(--transition); font-size: 1.1rem; font-weight: 600; user-select: none; }
+.stepper-btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.stepper-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.stepper-btn:active { background: rgba(255,255,255,0.12); transform: scale(0.95); }
+.input-group input { width: 72px; padding: 9px 8px; background: var(--bg-secondary); border: 1px solid var(--border); border-left: none; border-right: none; color: var(--text-primary); font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; outline: none; text-align: center; transition: border-color var(--transition); }
+.input-group input:focus { border-color: var(--accent-blue); }
+.input-group input::placeholder { color: var(--text-muted); font-weight: 400; }
+.input-group input::-webkit-outer-spin-button, .input-group input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.input-group input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+.btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 16px; font-family: var(--font); font-size: 0.8rem; font-weight: 600; border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; transition: all var(--transition); white-space: nowrap; position: relative; overflow: hidden; }
+.btn::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%); pointer-events: none; opacity: 0; transition: opacity var(--transition); }
+.btn:hover::after { opacity: 1; }
+.btn:active { transform: scale(0.96); }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
+.btn-addFirst { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); font-weight: 700; border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.btn-addFirst:hover { box-shadow: var(--shadow-glow-cyan); filter: brightness(1.12); }
+.btn-addLast { background: var(--accent-green); color: #000; border-color: var(--accent-green); font-weight: 700; }
+.btn-addLast:hover { box-shadow: var(--shadow-glow-green); filter: brightness(1.12); }
+.btn-removeFirst { background: var(--accent-red-bg); color: var(--accent-red); border: 1px solid rgba(255,82,82,0.2); }
+.btn-removeFirst:hover { background: rgba(255,82,82,0.18); box-shadow: var(--shadow-glow-red); }
+.btn-removeLast { background: var(--accent-amber-bg); color: var(--accent-amber); border: 1px solid rgba(255,193,7,0.2); }
+.btn-removeLast:hover { background: rgba(255,193,7,0.18); box-shadow: var(--shadow-glow-amber); }
+.btn-peekFirst { background: var(--accent-purple-bg); color: var(--accent-purple); border: 1px solid rgba(179,136,255,0.2); }
+.btn-peekFirst:hover { background: rgba(179,136,255,0.18); box-shadow: var(--shadow-glow-purple); }
+.btn-peekLast { background: var(--accent-purple-bg); color: var(--accent-purple); border: 1px solid rgba(179,136,255,0.2); }
+.btn-peekLast:hover { background: rgba(179,136,255,0.18); box-shadow: var(--shadow-glow-purple); }
+.btn-clear { background: rgba(255,255,255,0.03); color: var(--text-muted); border: 1px solid var(--border); }
+.btn-clear:hover { color: var(--text-secondary); background: rgba(255,255,255,0.06); }
+.btn-sample { background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple)); color: white; padding: 9px 18px; font-weight: 700; }
+.btn-sample:hover { box-shadow: var(--shadow-glow-blue); filter: brightness(1.15); }
+.btn-clear-log { background: rgba(255,255,255,0.03); color: var(--text-muted); border: 1px solid var(--border); padding: 5px 12px; font-size: 0.7rem; }
+
+/* Speed */
+.speed-control { display: flex; align-items: center; gap: 7px; }
+.speed-control label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+.speed-control input[type="range"] { width: 64px; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.08); border-radius: 2px; outline: none; }
+.speed-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-blue); cursor: pointer; box-shadow: 0 0 8px rgba(68,138,255,0.4); }
+
+/* ===== Panels ===== */
+.panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; backdrop-filter: blur(20px); }
+.panel-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid var(--border-subtle); background: rgba(255,255,255,0.01); }
+.panel-header h2 { font-size: 0.82rem; font-weight: 700; color: var(--text-secondary); }
+.badge { font-size: 0.68rem; font-weight: 600; padding: 4px 12px; background: var(--accent-blue-bg); color: var(--accent-blue); border-radius: var(--radius-full); border: 1px solid rgba(68,138,255,0.15); }
+.badge-cyan { background: var(--accent-cyan-bg); color: var(--accent-cyan); border-color: rgba(24,255,255,0.15); }
+.badge-purple { background: var(--accent-purple-bg); color: var(--accent-purple); border-color: rgba(179,136,255,0.15); }
+.code-hint { font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted); padding: 4px 10px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border: 1px solid var(--border); }
+
+/* ===== Circular View ===== */
+.main-content { display: flex; gap: 16px; }
+.ring-panel { flex: 1; min-height: 420px; }
+.ring-container { position: relative; width: 100%; min-height: 380px; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.ring-container canvas { max-width: 100%; }
+.empty-state { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-muted); font-size: 0.85rem; }
+.empty-state .hint { font-size: 0.72rem; opacity: 0.5; }
+.empty-state.hidden { display: none; }
+
+/* ===== Array View ===== */
+.array-panel { }
+.array-container { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; overflow-x: auto; min-height: 90px; }
+.array-row { display: flex; align-items: flex-end; gap: 3px; }
+.array-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.3s ease; min-width: 44px; }
+.array-value { width: 44px; height: 38px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); border: 1.5px solid var(--border); border-radius: 6px; font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: var(--text-muted); transition: all 0.3s ease; }
+.array-value.occupied { color: var(--text-primary); background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.12); }
+.array-value.head-cell { border-color: var(--accent-cyan); background: var(--accent-cyan-bg); color: var(--accent-cyan); }
+.array-value.tail-cell { border-color: var(--accent-purple); background: var(--accent-purple-bg); color: var(--accent-purple); }
+.array-value.hl-add { border-color: var(--accent-green); background: var(--accent-green-bg); color: var(--accent-green); animation: cellPop 0.4s ease; }
+.array-value.hl-remove { border-color: var(--accent-red); background: var(--accent-red-bg); color: var(--accent-red); }
+.array-value.hl-peek { border-color: var(--accent-amber); background: var(--accent-amber-bg); color: var(--accent-amber); animation: peekPulse 0.8s ease infinite; }
+@keyframes cellPop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes peekPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); box-shadow: 0 0 16px rgba(255,193,7,0.3); } }
+.array-index { font-size: 0.55rem; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono); opacity: 0.7; }
+.ptr-label { font-size: 0.55rem; font-weight: 700; font-family: var(--font-mono); padding: 1px 4px; border-radius: 3px; margin-top: 1px; }
+.ptr-label.head-label { color: var(--accent-cyan); background: var(--accent-cyan-bg); }
+.ptr-label.tail-label { color: var(--accent-purple); background: var(--accent-purple-bg); }
+.array-bracket { font-family: var(--font-mono); font-size: 1.3rem; font-weight: 300; color: rgba(255,255,255,0.15); align-self: center; }
+
+/* ===== Info Bar ===== */
+.info-bar { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius-md); font-size: 0.8rem; color: var(--text-secondary); min-height: 48px; transition: all 0.3s ease; backdrop-filter: blur(20px); }
+.info-bar.action-add { border-color: rgba(76,255,145,0.2); background: rgba(76,255,145,0.03); }
+.info-bar.action-remove { border-color: rgba(255,82,82,0.2); background: rgba(255,82,82,0.03); }
+.info-bar.action-peek { border-color: rgba(255,193,7,0.2); background: rgba(255,193,7,0.03); }
+.info-bar.action-resize { border-color: rgba(179,136,255,0.25); background: rgba(179,136,255,0.04); }
+.info-text { font-weight: 500; line-height: 1.5; }
+.info-text strong { color: var(--text-primary); font-weight: 700; }
+
+/* ===== Log ===== */
+.log-panel { max-height: 220px; }
+.log-container { padding: 10px 16px; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+.log-container::-webkit-scrollbar { width: 3px; }
+.log-container::-webkit-scrollbar-track { background: transparent; }
+.log-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+.log-entry { font-family: var(--font-mono); font-size: 0.68rem; padding: 4px 10px; border-radius: var(--radius-sm); line-height: 1.6; color: var(--text-secondary); }
+.log-entry.log-add { color: var(--accent-green); background: var(--accent-green-bg); }
+.log-entry.log-remove { color: var(--accent-red); background: var(--accent-red-bg); }
+.log-entry.log-peek { color: var(--accent-amber); background: var(--accent-amber-bg); }
+.log-entry.log-resize { color: var(--accent-purple); background: var(--accent-purple-bg); }
+.log-entry.log-info { color: var(--text-muted); }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+    .main-content { flex-direction: column; }
+    .header { flex-direction: column; align-items: flex-start; }
+    .controls-bar { flex-direction: column; align-items: flex-start; }
+    .controls-left, .controls-right { width: 100%; }
+}
+@media (max-width: 600px) {
+    .app { padding: 12px 14px; gap: 12px; }
+    .formula-badge { display: none; }
+    .stepper-btn { width: 32px; height: 36px; }
+    .input-group input { width: 60px; padding: 7px 6px; }
+}
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="8 12 12 8 16 12"/>
+                        <polyline points="8 16 12 12 16 16"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>ArrayDeque Visualizer</h1>
+                    <p class="subtitle">Java Collections Framework — Circular Buffer</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="formula-badge"><span class="formula-label">Head</span><code>elements[head]</code></div>
+                <div class="formula-badge"><span class="formula-label">Wrap</span><code>(i + 1) & (len - 1)</code></div>
+                <div class="formula-badge"><span class="formula-label">Capacity</span><code>Power of 2</code></div>
+            </div>
+        </header>
+
+        <!-- Mode Tabs -->
+        <div class="mode-bar">
+            <button class="mode-tab active" data-mode="deque">
+                🔄 Deque <span class="mode-tag">Double-Ended</span>
+            </button>
+            <button class="mode-tab" data-mode="queue">
+                ➡️ Queue <span class="mode-tag">FIFO</span>
+            </button>
+            <button class="mode-tab" data-mode="stack">
+                📚 Stack <span class="mode-tag">LIFO</span>
+            </button>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls-bar">
+            <div class="controls-left">
+                <div class="input-group">
+                    <button class="stepper-btn" id="decBtn" type="button" aria-label="Decrease">−</button>
+                    <input type="number" id="valueInput" placeholder="0" min="-999" max="999">
+                    <button class="stepper-btn" id="incBtn" type="button" aria-label="Increase" style="border-radius:0">+</button>
+                    <button id="addFirstBtn" class="btn btn-addFirst">⬅ addFirst</button>
+                </div>
+                <button id="addLastBtn" class="btn btn-addLast">addLast ➡</button>
+                <button id="removeFirstBtn" class="btn btn-removeFirst">removeFirst</button>
+                <button id="removeLastBtn" class="btn btn-removeLast">removeLast</button>
+                <button id="peekFirstBtn" class="btn btn-peekFirst">peekFirst</button>
+                <button id="peekLastBtn" class="btn btn-peekLast">peekLast</button>
+                <button id="clearBtn" class="btn btn-clear">Clear</button>
+            </div>
+            <div class="controls-right">
+                <button id="sampleBtn" class="btn btn-sample">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Load Example
+                </button>
+                <div class="speed-control">
+                    <label>Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="panel ring-panel">
+                <div class="panel-header">
+                    <h2>🔄 Circular Buffer View (Memory Layout)</h2>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                        <span class="badge badge-cyan" id="headLabel">Head: 0</span>
+                        <span class="badge badge-purple" id="tailLabel">Tail: 0</span>
+                        <span class="badge" id="sizeLabel">Size: 0 / 16</span>
+                    </div>
+                </div>
+                <div class="ring-container" id="ringContainer">
+                    <canvas id="ringCanvas" width="400" height="400"></canvas>
+                    <div class="empty-state" id="emptyState">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                            <circle cx="12" cy="12" r="10"/><polyline points="8 12 12 8 16 12"/>
+                        </svg>
+                        <p>Add elements to visualize the circular buffer</p>
+                        <p class="hint">Or click <strong>"Load Example"</strong> to see a demo</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Array View -->
+        <div class="panel array-panel">
+            <div class="panel-header">
+                <h2>📦 Internal Array (Object[] elements)</h2>
+                <code class="code-hint">Circular wrap: index & (elements.length - 1)</code>
+            </div>
+            <div class="array-container" id="arrayContainer">
+                <div style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem;text-align:center;padding:10px;width:100%;">
+                    Empty — Object[] elements = new Object[16]
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Bar -->
+        <div class="info-bar" id="infoBar">
+            <div>ℹ️</div>
+            <div class="info-text" id="infoText">Ready. Add elements or load the example to begin. Mode: <strong>Deque</strong></div>
+        </div>
+
+        <!-- Operation Log -->
+        <div class="panel log-panel">
+            <div class="panel-header">
+                <h2>📋 Operation Log</h2>
+                <button id="clearLogBtn" class="btn btn-clear-log">Clear</button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-info">Visualizer ready. Default capacity = 16, Deque mode.</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+/**
+ * Circular ArrayDeque — mirrors Java's ArrayDeque internals.
+ * Uses power-of-2 capacity with bitwise wrap-around.
+ */
+class CircularDeque {
+    constructor(initCap = 16) {
+        this.capacity = initCap;
+        this.elements = new Array(this.capacity).fill(null);
+        this.head = 0;
+        this.tail = 0;
+    }
+    get size() { return (this.tail - this.head + this.capacity) & (this.capacity - 1); }
+    get isEmpty() { return this.head === this.tail; }
+
+    _doubleCapacity() {
+        const oldcap = this.capacity, newcap = oldcap * 2;
+        const newArr = new Array(newcap).fill(null);
+        // When _doubleCapacity is called, head === tail meaning the array is
+        // completely full, so the number of elements equals oldcap (not this.size
+        // which would incorrectly return 0 because head === tail).
+        const sz = oldcap;
+        for (let i = 0; i < sz; i++) newArr[i] = this.elements[(this.head + i) & (oldcap - 1)];
+        this.elements = newArr;
+        this.head = 0;
+        this.tail = sz;
+        this.capacity = newcap;
+        return { oldCap: oldcap, newCap: newcap };
+    }
+
+    addFirst(val) {
+        const ops = [];
+        this.head = (this.head - 1 + this.capacity) & (this.capacity - 1);
+        this.elements[this.head] = val;
+        ops.push({ type: 'add', position: 'first', index: this.head, value: val, head: this.head, tail: this.tail, snapshot: [...this.elements], message: `addFirst(${val}): head moved to index ${this.head}, placed ${val}` });
+        if (this.head === this.tail) {
+            const r = this._doubleCapacity();
+            ops.push({ type: 'resize', oldCap: r.oldCap, newCap: r.newCap, head: this.head, tail: this.tail, snapshot: [...this.elements], message: `Capacity doubled: ${r.oldCap} → ${r.newCap}. Array rebuilt, head=0, tail=${this.tail}` });
+        }
+        return ops;
+    }
+
+    addLast(val) {
+        const ops = [];
+        this.elements[this.tail] = val;
+        const placedAt = this.tail;
+        this.tail = (this.tail + 1) & (this.capacity - 1);
+        ops.push({ type: 'add', position: 'last', index: placedAt, value: val, head: this.head, tail: this.tail, snapshot: [...this.elements], message: `addLast(${val}): placed ${val} at index ${placedAt}, tail moved to ${this.tail}` });
+        if (this.head === this.tail) {
+            const r = this._doubleCapacity();
+            ops.push({ type: 'resize', oldCap: r.oldCap, newCap: r.newCap, head: this.head, tail: this.tail, snapshot: [...this.elements], message: `Capacity doubled: ${r.oldCap} → ${r.newCap}. Array rebuilt, head=0, tail=${this.tail}` });
+        }
+        return ops;
+    }
+
+    removeFirst() {
+        if (this.isEmpty) return null;
+        const ops = [];
+        const val = this.elements[this.head];
+        const oldHead = this.head;
+        this.elements[this.head] = null;
+        this.head = (this.head + 1) & (this.capacity - 1);
+        ops.push({ type: 'remove', position: 'first', index: oldHead, value: val, head: this.head, tail: this.tail, snapshot: [...this.elements], message: `removeFirst(): removed ${val} from index ${oldHead}, head moved to ${this.head}` });
+        return { value: val, ops };
+    }
+
+    removeLast() {
+        if (this.isEmpty) return null;
+        const ops = [];
+        this.tail = (this.tail - 1 + this.capacity) & (this.capacity - 1);
+        const val = this.elements[this.tail];
+        const removedAt = this.tail;
+        this.elements[this.tail] = null;
+        ops.push({ type: 'remove', position: 'last', index: removedAt, value: val, head: this.head, tail: this.tail, snapshot: [...this.elements], message: `removeLast(): removed ${val} from index ${removedAt}, tail moved to ${this.tail}` });
+        return { value: val, ops };
+    }
+
+    peekFirst() { return this.isEmpty ? null : this.elements[this.head]; }
+    peekLast() { return this.isEmpty ? null : this.elements[(this.tail - 1 + this.capacity) & (this.capacity - 1)]; }
+    clear() { this.elements = new Array(this.capacity).fill(null); this.head = 0; this.tail = 0; }
+    toLogical() { const a = []; for (let i = 0; i < this.size; i++) a.push(this.elements[(this.head + i) & (this.capacity - 1)]); return a; }
+}
+
+/**
+ * Visualizer UI
+ */
+(function () {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const decBtn = $('decBtn'), incBtn = $('incBtn');
+    const valueInput = $('valueInput');
+    const addFirstBtn = $('addFirstBtn'), addLastBtn = $('addLastBtn');
+    const removeFirstBtn = $('removeFirstBtn'), removeLastBtn = $('removeLastBtn');
+    const peekFirstBtn = $('peekFirstBtn'), peekLastBtn = $('peekLastBtn');
+    const clearBtn = $('clearBtn'), sampleBtn = $('sampleBtn'), clearLogBtn = $('clearLogBtn');
+    const speedSlider = $('speedSlider');
+    const ringCanvas = $('ringCanvas'), ringContainer = $('ringContainer'), emptyState = $('emptyState');
+    const arrayContainer = $('arrayContainer');
+    const infoBar = $('infoBar'), infoText = $('infoText');
+    const logContainer = $('logContainer');
+    const headLabel = $('headLabel'), tailLabel = $('tailLabel'), sizeLabel = $('sizeLabel');
+
+    const allBtns = [addFirstBtn, addLastBtn, removeFirstBtn, removeLastBtn, peekFirstBtn, peekLastBtn, clearBtn, sampleBtn];
+    let deque = new CircularDeque(16);
+    let animating = false;
+    let currentMode = 'deque'; // 'deque' | 'queue' | 'stack'
+
+    // Mode config: which buttons to show
+    const modeConfig = {
+        deque: { addFirstBtn: ['⬅ addFirst', true], addLastBtn: ['addLast ➡', true], removeFirstBtn: ['removeFirst', true], removeLastBtn: ['removeLast', true], peekFirstBtn: ['peekFirst', true], peekLastBtn: ['peekLast', true] },
+        queue: { addFirstBtn: ['', false], addLastBtn: ['offer ➡', true], removeFirstBtn: ['poll', true], removeLastBtn: ['', false], peekFirstBtn: ['peek', true], peekLastBtn: ['', false] },
+        stack: { addFirstBtn: ['push ⬅', true], addLastBtn: ['', false], removeFirstBtn: ['pop', true], removeLastBtn: ['', false], peekFirstBtn: ['peek', true], peekLastBtn: ['', false] }
+    };
+
+    function applyMode(mode) {
+        currentMode = mode;
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === mode));
+        const cfg = modeConfig[mode];
+        for (const [id, [label, visible]] of Object.entries(cfg)) {
+            const btn = window[id] || $(id);
+            if (!btn) continue;
+            btn.style.display = visible ? '' : 'none';
+            if (label) btn.textContent = label;
+        }
+        setInfo(`Mode: <strong>${mode.charAt(0).toUpperCase() + mode.slice(1)}</strong> — ${mode === 'deque' ? 'Double-ended queue' : mode === 'queue' ? 'FIFO queue' : 'LIFO stack'}`, '');
+    }
+
+    function getDelay() { const s = [1200, 800, 550, 350, 200]; return s[parseInt(speedSlider.value) - 1] || 550; }
+    function setAnimating(v) { animating = v; allBtns.forEach(b => b.disabled = v); updateBtnState(); }
+    function updateBtnState() { removeFirstBtn.disabled = animating || deque.isEmpty; removeLastBtn.disabled = animating || deque.isEmpty; peekFirstBtn.disabled = animating || deque.isEmpty; peekLastBtn.disabled = animating || deque.isEmpty; }
+
+    function log(message, type = 'info') {
+        const e = document.createElement('div');
+        e.className = `log-entry log-${type}`;
+        const t = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        e.textContent = `[${t}] ${message}`;
+        logContainer.appendChild(e);
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+    function setInfo(msg, cls = '') { infoText.innerHTML = msg; infoBar.className = 'info-bar' + (cls ? ` action-${cls}` : ''); }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    /* ===== Circular Buffer Canvas Drawing ===== */
+    function drawRing(highlight = {}) {
+        const cap = deque.capacity;
+        const sz = deque.size;
+        const h = deque.head, t = deque.tail;
+        const els = deque.elements;
+
+        // Responsive sizing
+        const containerW = ringContainer.clientWidth - 40;
+        const dim = Math.min(Math.max(340, containerW), 500);
+        ringCanvas.width = dim * 2; // retina
+        ringCanvas.height = dim * 2;
+        ringCanvas.style.width = dim + 'px';
+        ringCanvas.style.height = dim + 'px';
+        const ctx = ringCanvas.getContext('2d');
+        ctx.scale(2, 2);
+
+        const cx = dim / 2, cy = dim / 2;
+        const outerR = dim / 2 - 40;
+        const innerR = outerR - 36;
+        const midR = (outerR + innerR) / 2;
+        const gap = 0.015;
+
+        if (sz === 0 && !highlight.peek) { emptyState.classList.remove('hidden'); } else { emptyState.classList.add('hidden'); }
+
+        ctx.clearRect(0, 0, dim, dim);
+
+        // Draw each cell as an arc segment
+        for (let i = 0; i < cap; i++) {
+            const startAngle = (i / cap) * Math.PI * 2 - Math.PI / 2 + gap;
+            const endAngle = ((i + 1) / cap) * Math.PI * 2 - Math.PI / 2 - gap;
+            const val = els[i];
+            const occupied = val !== null;
+            const isHead = i === h && sz > 0;
+            const isTail = i === t;
+
+            // Determine cell color
+            let fillColor = 'rgba(255,255,255,0.02)';
+            let strokeColor = 'rgba(255,255,255,0.06)';
+            let textColor = '#555';
+
+            if (occupied) {
+                fillColor = 'rgba(68,138,255,0.08)';
+                strokeColor = 'rgba(68,138,255,0.25)';
+                textColor = '#ccc';
+            }
+            if (isHead && occupied) {
+                fillColor = 'rgba(24,255,255,0.12)';
+                strokeColor = 'rgba(24,255,255,0.5)';
+                textColor = '#18ffff';
+            }
+            if (highlight.addIndex === i) {
+                fillColor = 'rgba(76,255,145,0.15)';
+                strokeColor = 'rgba(76,255,145,0.6)';
+                textColor = '#4cff91';
+            }
+            if (highlight.removeIndex === i) {
+                fillColor = 'rgba(255,82,82,0.12)';
+                strokeColor = 'rgba(255,82,82,0.5)';
+                textColor = '#ff5252';
+            }
+            if (highlight.peekIndex === i) {
+                fillColor = 'rgba(255,193,7,0.15)';
+                strokeColor = 'rgba(255,193,7,0.6)';
+                textColor = '#ffc107';
+            }
+
+            // Draw arc segment
+            ctx.beginPath();
+            ctx.arc(cx, cy, outerR, startAngle, endAngle);
+            ctx.arc(cx, cy, innerR, endAngle, startAngle, true);
+            ctx.closePath();
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Value text
+            const midAngle = (startAngle + endAngle) / 2;
+            const tx = cx + Math.cos(midAngle) * midR;
+            const ty = cy + Math.sin(midAngle) * midR;
+            ctx.font = `700 ${cap <= 16 ? 13 : cap <= 32 ? 10 : 8}px 'JetBrains Mono', monospace`;
+            ctx.fillStyle = textColor;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(val !== null ? String(val) : '', tx, ty);
+
+            // Index label
+            const lx = cx + Math.cos(midAngle) * (innerR - 14);
+            const ly = cy + Math.sin(midAngle) * (innerR - 14);
+            ctx.font = `600 ${cap <= 16 ? 9 : 7}px 'JetBrains Mono', monospace`;
+            ctx.fillStyle = '#444';
+            ctx.fillText(String(i), lx, ly);
+        }
+
+        // Head pointer
+        if (sz > 0 || highlight.peek) {
+            const hAngle = (h / cap) * Math.PI * 2 - Math.PI / 2;
+            const hx = cx + Math.cos(hAngle) * (outerR + 22);
+            const hy = cy + Math.sin(hAngle) * (outerR + 22);
+            ctx.font = "700 10px 'Inter', sans-serif";
+            ctx.fillStyle = '#18ffff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('H', hx, hy);
+            // Arrow towards the slot
+            const ahx = cx + Math.cos(hAngle) * (outerR + 4);
+            const ahy = cy + Math.sin(hAngle) * (outerR + 4);
+            ctx.beginPath();
+            ctx.moveTo(hx + Math.cos(hAngle) * -8, hy + Math.sin(hAngle) * -8);
+            ctx.lineTo(ahx, ahy);
+            ctx.strokeStyle = 'rgba(24,255,255,0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // Tail pointer
+        {
+            const tAngle = (t / cap) * Math.PI * 2 - Math.PI / 2;
+            const tx2 = cx + Math.cos(tAngle) * (outerR + 22);
+            const ty2 = cy + Math.sin(tAngle) * (outerR + 22);
+            ctx.font = "700 10px 'Inter', sans-serif";
+            ctx.fillStyle = '#b388ff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('T', tx2, ty2);
+            const atx = cx + Math.cos(tAngle) * (outerR + 4);
+            const aty = cy + Math.sin(tAngle) * (outerR + 4);
+            ctx.beginPath();
+            ctx.moveTo(tx2 + Math.cos(tAngle) * -8, ty2 + Math.sin(tAngle) * -8);
+            ctx.lineTo(atx, aty);
+            ctx.strokeStyle = 'rgba(179,136,255,0.5)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+        }
+
+        // Center info
+        ctx.font = "800 18px 'Inter', sans-serif";
+        ctx.fillStyle = '#f0f0f0';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(sz > 0 ? String(sz) : '∅', cx, cy - 8);
+        ctx.font = "500 10px 'Inter', sans-serif";
+        ctx.fillStyle = '#555';
+        ctx.fillText(sz > 0 ? `of ${cap}` : 'empty', cx, cy + 10);
+    }
+
+    /* ===== Linear Array View ===== */
+    function renderArray(highlight = {}) {
+        const cap = deque.capacity;
+        const els = deque.elements;
+        const h = deque.head, t = deque.tail, sz = deque.size;
+        if (sz === 0 && !highlight.peekIndex && highlight.peekIndex !== 0) {
+            arrayContainer.innerHTML = `<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem;text-align:center;padding:10px;width:100%;">Empty — Object[] elements = new Object[${cap}]</div>`;
+            return;
+        }
+        let html = '<div class="array-row"><span class="array-bracket">[</span>';
+        for (let i = 0; i < cap; i++) {
+            const val = els[i];
+            const occupied = val !== null;
+            let cls = occupied ? 'occupied' : '';
+            if (i === h && sz > 0) cls += ' head-cell';
+            if (highlight.addIndex === i) cls = 'hl-add';
+            if (highlight.removeIndex === i) cls = 'hl-remove';
+            if (highlight.peekIndex === i) cls = 'hl-peek';
+            let ptrs = '';
+            if (i === h && sz > 0) ptrs += '<span class="ptr-label head-label">H</span>';
+            if (i === t) ptrs += '<span class="ptr-label tail-label">T</span>';
+            html += `<div class="array-cell"><div class="array-value ${cls}">${val !== null ? val : ''}</div><span class="array-index">${i}</span>${ptrs}</div>`;
+        }
+        html += '<span class="array-bracket">]</span></div>';
+        arrayContainer.innerHTML = html;
+    }
+
+    function fullRender(hl = {}) {
+        drawRing(hl);
+        renderArray(hl);
+        headLabel.textContent = `Head: ${deque.head}`;
+        tailLabel.textContent = `Tail: ${deque.tail}`;
+        sizeLabel.textContent = `Size: ${deque.size} / ${deque.capacity}`;
+        updateBtnState();
+    }
+
+    /* ===== Animation ===== */
+    async function animateOps(ops, logType) {
+        const d = getDelay();
+        for (const op of ops) {
+            if (op.type === 'add') {
+                fullRender({ addIndex: op.index });
+                setInfo(`<strong>${op.position === 'first' ? 'addFirst' : 'addLast'}(${op.value})</strong> — Placed at index <strong>${op.index}</strong>. Head=${op.head}, Tail=${op.tail}`, 'add');
+                log(op.message, 'add');
+                await sleep(d);
+            } else if (op.type === 'remove') {
+                fullRender({ removeIndex: op.index });
+                setInfo(`<strong>${op.position === 'first' ? 'removeFirst' : 'removeLast'}()</strong> → <strong>${op.value}</strong> from index ${op.index}. Head=${op.head}, Tail=${op.tail}`, 'remove');
+                log(op.message, 'remove');
+                await sleep(d);
+            } else if (op.type === 'resize') {
+                fullRender();
+                setInfo(`⚡ <strong>Resize!</strong> ${op.message}`, 'resize');
+                log(op.message, 'resize');
+                await sleep(d * 1.5);
+            }
+        }
+    }
+
+    /* ===== Handlers ===== */
+    function getVal() { const v = parseInt(valueInput.value); if (isNaN(v)) { setInfo('⚠️ Enter a valid integer.', ''); return null; } valueInput.value = ''; valueInput.focus(); return v; }
+
+    async function handleAddFirst() { const v = getVal(); if (v === null) return; setAnimating(true); const ops = deque.addFirst(v); await animateOps(ops, 'add'); setInfo(`✅ <strong>${v}</strong> added to front. Size: <strong>${deque.size}</strong>`, 'add'); fullRender(); setAnimating(false); }
+    async function handleAddLast() { const v = getVal(); if (v === null) return; setAnimating(true); const ops = deque.addLast(v); await animateOps(ops, 'add'); setInfo(`✅ <strong>${v}</strong> added to back. Size: <strong>${deque.size}</strong>`, 'add'); fullRender(); setAnimating(false); }
+
+    async function handleRemoveFirst() { if (deque.isEmpty) return; setAnimating(true); const r = deque.removeFirst(); await animateOps(r.ops, 'remove'); setInfo(`🗑️ <strong>removeFirst()</strong> → <strong>${r.value}</strong>. Size: <strong>${deque.size}</strong>`, 'remove'); fullRender(); setAnimating(false); }
+    async function handleRemoveLast() { if (deque.isEmpty) return; setAnimating(true); const r = deque.removeLast(); await animateOps(r.ops, 'remove'); setInfo(`🗑️ <strong>removeLast()</strong> → <strong>${r.value}</strong>. Size: <strong>${deque.size}</strong>`, 'remove'); fullRender(); setAnimating(false); }
+
+    async function handlePeekFirst() { if (deque.isEmpty) return; setAnimating(true); const v = deque.peekFirst(); log(`peekFirst() → ${v}`, 'peek'); setInfo(`🔍 <strong>peekFirst()</strong> → <strong>${v}</strong> (NOT removed). O(1)`, 'peek'); fullRender({ peekIndex: deque.head }); await sleep(1500); fullRender(); setAnimating(false); }
+    async function handlePeekLast() { if (deque.isEmpty) return; setAnimating(true); const li = (deque.tail - 1 + deque.capacity) & (deque.capacity - 1); const v = deque.peekLast(); log(`peekLast() → ${v}`, 'peek'); setInfo(`🔍 <strong>peekLast()</strong> → <strong>${v}</strong> (NOT removed). O(1)`, 'peek'); fullRender({ peekIndex: li }); await sleep(1500); fullRender(); setAnimating(false); }
+
+    function handleClear() { deque.clear(); log('clear() — All elements removed', 'info'); setInfo('🧹 Deque cleared.', ''); fullRender(); }
+
+    async function handleSample() {
+        deque = new CircularDeque(16);
+        fullRender();
+        setAnimating(true);
+        const vals = [10, 20, 30, 40, 50];
+        log(`Loading example: addLast(${vals.join(', ')}) then addFirst(5, 1)`, 'info');
+        for (const v of vals) { const ops = deque.addLast(v); await animateOps(ops, 'add'); fullRender(); await sleep(150); }
+        const frontVals = [5, 1];
+        for (const v of frontVals) { const ops = deque.addFirst(v); await animateOps(ops, 'add'); fullRender(); await sleep(150); }
+        setInfo(`✅ Example loaded: [${deque.toLogical().join(', ')}]. Try <strong>removeFirst()</strong> or <strong>removeLast()</strong>!`, 'add');
+        fullRender();
+        setAnimating(false);
+    }
+
+    /* ===== Event Listeners ===== */
+    decBtn.addEventListener('click', () => { const v = parseInt(valueInput.value) || 0; valueInput.value = v - 1; });
+    incBtn.addEventListener('click', () => { const v = parseInt(valueInput.value) || 0; valueInput.value = v + 1; });
+    valueInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !animating) { if (currentMode === 'stack') handleAddFirst(); else handleAddLast(); } });
+
+    addFirstBtn.addEventListener('click', handleAddFirst);
+    addLastBtn.addEventListener('click', handleAddLast);
+    removeFirstBtn.addEventListener('click', handleRemoveFirst);
+    removeLastBtn.addEventListener('click', handleRemoveLast);
+    peekFirstBtn.addEventListener('click', handlePeekFirst);
+    peekLastBtn.addEventListener('click', handlePeekLast);
+    clearBtn.addEventListener('click', handleClear);
+    sampleBtn.addEventListener('click', handleSample);
+    clearLogBtn.addEventListener('click', () => { logContainer.innerHTML = ''; log('Log cleared.', 'info'); });
+
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            if (animating) return;
+            applyMode(tab.dataset.mode);
+            log(`Switched to ${tab.dataset.mode.toUpperCase()} mode`, 'info');
+        });
+    });
+
+    let resizeTimer;
+    window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => fullRender(), 150); });
+
+    /* ===== Init ===== */
+    applyMode('deque');
+    fullRender();
+})();
+</script>
+</body>
+</html>

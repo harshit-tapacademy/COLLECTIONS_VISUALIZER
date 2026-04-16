@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriorityQueue Visualizer — Binary Min-Heap</title>
+    <meta name="description" content="Interactive binary min-heap visualizer for teaching Java PriorityQueue. Animated insert, poll, peek with tree and array views.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+/* ===== Design System — Pure Black Premium ===== */
+:root {
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-panel: #0d0d0d;
+    --bg-panel-hover: #161616;
+    --bg-elevated: #111111;
+    --border: rgba(255,255,255,0.06);
+    --border-subtle: rgba(255,255,255,0.04);
+    --border-glow: rgba(255,255,255,0.12);
+
+    --text-primary: #f0f0f0;
+    --text-secondary: #8a8a8a;
+    --text-muted: #555555;
+
+    --accent-green: #4cff91;
+    --accent-green-bg: rgba(76, 255, 145, 0.10);
+    --accent-red: #ff5252;
+    --accent-red-bg: rgba(255, 82, 82, 0.08);
+    --accent-blue: #448aff;
+    --accent-blue-bg: rgba(68, 138, 255, 0.08);
+    --accent-amber: #ffc107;
+    --accent-amber-bg: rgba(255, 193, 7, 0.08);
+    --accent-purple: #b388ff;
+    --accent-purple-bg: rgba(179, 136, 255, 0.08);
+    --accent-cyan: #18ffff;
+
+    --node-default: #448aff;
+    --node-root: #f5a623;
+    --node-highlight: #ffc107;
+    --node-swap: #ff5252;
+    --node-new: #b388ff;
+    --edge-color: rgba(255,255,255,0.10);
+    --edge-highlight: #ffc107;
+
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 999px;
+
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+    --shadow-lg: 0 8px 40px rgba(0,0,0,0.7);
+    --shadow-glow-green: 0 0 24px rgba(76, 255, 145, 0.25);
+    --shadow-glow-blue: 0 0 24px rgba(68, 138, 255, 0.25);
+    --shadow-glow-amber: 0 0 24px rgba(255, 193, 7, 0.3);
+    --shadow-glow-red: 0 0 24px rgba(255, 82, 82, 0.25);
+    --shadow-glow-purple: 0 0 24px rgba(179, 136, 255, 0.25);
+
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: var(--font);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.app { max-width: 1400px; margin: 0 auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+/* ===== Header ===== */
+.header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 28px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    flex-wrap: wrap; gap: 16px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+.logo-icon {
+    width: 48px; height: 48px; border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    display: flex; align-items: center; justify-content: center; color: white;
+    box-shadow: var(--shadow-glow-blue);
+    transition: transform var(--transition), box-shadow var(--transition);
+}
+.logo-icon:hover { transform: scale(1.08) rotate(-3deg); box-shadow: 0 0 32px rgba(68, 138, 255, 0.4); }
+.header h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, #888888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.subtitle { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; margin-top: 3px; letter-spacing: 0.02em; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.formula-badge {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 0.72rem;
+    transition: border-color var(--transition), background var(--transition);
+}
+.formula-badge:hover { background: rgba(255,255,255,0.06); border-color: var(--border-glow); }
+.formula-label { color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.58rem; letter-spacing: 0.1em; }
+.formula-badge code { font-family: var(--font-mono); color: var(--accent-cyan); font-weight: 600; font-size: 0.72rem; }
+
+/* ===== Controls ===== */
+.controls-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    gap: 14px; flex-wrap: wrap;
+    backdrop-filter: blur(20px);
+}
+.controls-left, .controls-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Stepper Input */
+.input-group { display: flex; align-items: center; gap: 0; }
+.stepper-btn {
+    width: 36px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+    color: var(--text-secondary); cursor: pointer;
+    transition: all var(--transition); font-size: 1.1rem; font-weight: 600;
+    user-select: none; -webkit-user-select: none;
+}
+.stepper-btn:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.stepper-btn:hover { background: rgba(255,255,255,0.08); color: var(--text-primary); }
+.stepper-btn:active { background: rgba(255,255,255,0.12); transform: scale(0.95); }
+.input-group input {
+    width: 72px; padding: 9px 8px;
+    background: var(--bg-secondary); border: 1px solid var(--border); border-left: none; border-right: none;
+    color: var(--text-primary); font-family: var(--font-mono);
+    font-size: 0.9rem; font-weight: 700; outline: none;
+    text-align: center;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.input-group input:focus { border-color: var(--accent-blue); box-shadow: inset 0 0 0 1px var(--accent-blue); }
+.input-group input::placeholder { color: var(--text-muted); font-weight: 400; }
+/* Hide native number spinners */
+.input-group input::-webkit-outer-spin-button,
+.input-group input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.input-group input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+
+.btn {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 9px 16px;
+    font-family: var(--font); font-size: 0.8rem; font-weight: 600;
+    border: 1px solid transparent; border-radius: var(--radius-sm);
+    cursor: pointer; transition: all var(--transition); white-space: nowrap;
+    position: relative; overflow: hidden;
+}
+.btn::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%);
+    pointer-events: none; opacity: 0; transition: opacity var(--transition);
+}
+.btn:hover::after { opacity: 1; }
+.btn:active { transform: scale(0.96); }
+
+.btn-add {
+    background: var(--accent-green); color: #000; border-color: var(--accent-green);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-weight: 700; letter-spacing: 0.02em;
+}
+.btn-add:hover { box-shadow: var(--shadow-glow-green); filter: brightness(1.12); }
+.btn-poll {
+    background: rgba(255, 82, 82, 0.1); color: var(--accent-red);
+    border: 1px solid rgba(255, 82, 82, 0.2);
+    backdrop-filter: blur(8px);
+}
+.btn-poll:hover { background: rgba(255, 82, 82, 0.18); box-shadow: var(--shadow-glow-red); border-color: rgba(255, 82, 82, 0.35); }
+.btn-peek {
+    background: rgba(255, 193, 7, 0.1); color: var(--accent-amber);
+    border: 1px solid rgba(255, 193, 7, 0.2);
+    backdrop-filter: blur(8px);
+}
+.btn-peek:hover { background: rgba(255, 193, 7, 0.18); box-shadow: var(--shadow-glow-amber); border-color: rgba(255, 193, 7, 0.35); }
+.btn-clear {
+    background: rgba(255,255,255,0.03); color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+.btn-clear:hover { color: var(--text-secondary); background: rgba(255,255,255,0.06); border-color: var(--border-glow); }
+.btn-sample {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    color: white; padding: 9px 18px; font-weight: 700;
+}
+.btn-sample:hover { box-shadow: var(--shadow-glow-blue); filter: brightness(1.15); }
+.btn-clear-log { background: rgba(255,255,255,0.03); color: var(--text-muted); border: 1px solid var(--border); padding: 5px 12px; font-size: 0.7rem; }
+.btn-clear-log:hover { color: var(--text-secondary); background: rgba(255,255,255,0.06); }
+
+/* Toggle */
+.heap-toggle { display: flex; align-items: center; gap: 8px; }
+.toggle-label { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); transition: color 0.3s; }
+.toggle-label.active { color: var(--accent-blue); text-shadow: 0 0 12px rgba(68, 138, 255, 0.3); }
+.toggle-switch { position: relative; width: 42px; height: 24px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--accent-blue); border-radius: var(--radius-full);
+    cursor: pointer; transition: background 0.3s, box-shadow 0.3s;
+}
+.toggle-slider::before {
+    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; bottom: 3px;
+    background: white; border-radius: 50%; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--accent-purple); box-shadow: 0 0 16px rgba(179, 136, 255, 0.3); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+/* Speed */
+.speed-control { display: flex; align-items: center; gap: 7px; }
+.speed-control label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.03em; }
+.speed-control input[type="range"] { width: 64px; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.08); border-radius: 2px; outline: none; }
+.speed-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-blue); cursor: pointer; box-shadow: 0 0 8px rgba(68, 138, 255, 0.4); transition: box-shadow var(--transition); }
+.speed-control input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 14px rgba(68, 138, 255, 0.6); }
+
+/* ===== Panels ===== */
+.panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    backdrop-filter: blur(20px);
+}
+.panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(255,255,255,0.01);
+}
+.panel-header h2 { font-size: 0.82rem; font-weight: 700; letter-spacing: -0.01em; color: var(--text-secondary); }
+.badge {
+    font-size: 0.68rem; font-weight: 600;
+    padding: 4px 12px;
+    background: var(--accent-blue-bg); color: var(--accent-blue);
+    border-radius: var(--radius-full); border: 1px solid rgba(68, 138, 255, 0.15);
+}
+.code-hint {
+    font-family: var(--font-mono); font-size: 0.62rem; color: var(--text-muted);
+    padding: 4px 10px; background: rgba(255,255,255,0.03);
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+}
+
+/* ===== Tree ===== */
+.main-content { display: flex; flex-direction: column; gap: 16px; }
+.tree-panel { min-height: 360px; }
+.tree-container { position: relative; width: 100%; min-height: 320px; padding: 24px; overflow: hidden; }
+.tree-svg { position: absolute; top: 24px; left: 24px; width: calc(100% - 48px); height: calc(100% - 48px); pointer-events: none; overflow: visible; }
+.tree-svg path {
+    fill: none; stroke: rgba(255,255,255,0.12); stroke-width: 2;
+    transition: all 0.4s ease;
+}
+.tree-svg path.highlight {
+    stroke: var(--edge-highlight); stroke-width: 2.5;
+    filter: drop-shadow(0 0 6px rgba(255, 193, 7, 0.5));
+}
+/* Arrowhead markers */
+.tree-svg marker path { fill: rgba(255,255,255,0.25); stroke: none; }
+.tree-svg marker.highlight-marker path { fill: var(--edge-highlight); }
+/* Keep line styles for backwards compat */
+.tree-svg line { stroke: var(--edge-color); stroke-width: 2; transition: all 0.4s ease; }
+.tree-svg line.highlight { stroke: var(--edge-highlight); stroke-width: 3; filter: drop-shadow(0 0 4px rgba(255, 193, 7, 0.5)); }
+.tree-nodes { position: relative; width: 100%; height: 100%; }
+
+.tree-node {
+    position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); z-index: 2;
+}
+.node-circle {
+    width: 50px; height: 50px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-mono); font-size: 0.95rem; font-weight: 700; color: white;
+    background: var(--node-default); border: 2.5px solid rgba(255,255,255,0.1);
+    box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.1);
+    transition: all 0.3s ease; cursor: default;
+}
+.node-circle.root {
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    border-color: rgba(245, 166, 35, 0.5);
+    box-shadow: 0 0 28px rgba(245, 166, 35, 0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+    color: #1a1a1a; font-weight: 800;
+}
+.node-circle.highlight { background: var(--node-highlight); border-color: rgba(255, 193, 7, 0.4); box-shadow: var(--shadow-glow-amber); transform: scale(1.15); }
+.node-circle.swap { background: var(--node-swap); border-color: rgba(255, 82, 82, 0.4); box-shadow: var(--shadow-glow-red); transform: scale(1.2); }
+.node-circle.new-node { background: var(--node-new); border-color: rgba(179, 136, 255, 0.4); box-shadow: var(--shadow-glow-purple); animation: nodePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.node-circle.peek-highlight { background: var(--node-highlight); border-color: rgba(255, 193, 7, 0.5); box-shadow: 0 0 32px rgba(255, 193, 7, 0.4); animation: peekPulse 0.8s ease infinite; }
+
+@keyframes nodePopIn { 0% { transform: scale(0); opacity: 0; } 60% { transform: scale(1.3); } 100% { transform: scale(1); opacity: 1; } }
+@keyframes peekPulse { 0%, 100% { transform: scale(1); box-shadow: 0 0 22px rgba(255, 193, 7, 0.25); } 50% { transform: scale(1.1); box-shadow: 0 0 38px rgba(255, 193, 7, 0.5); } }
+
+.node-index { font-size: 0.58rem; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono); opacity: 0.7; }
+.empty-state {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; color: var(--text-muted); font-size: 0.85rem;
+}
+.empty-state .hint { font-size: 0.72rem; opacity: 0.5; }
+.empty-state.hidden { display: none; }
+
+/* ===== Array View ===== */
+.array-container { padding: 18px 20px; display: flex; align-items: center; gap: 6px; overflow-x: auto; min-height: 78px; flex-wrap: wrap; }
+.array-empty { color: var(--text-muted); font-size: 0.78rem; font-family: var(--font-mono); width: 100%; text-align: center; padding: 10px; }
+.array-empty.hidden { display: none; }
+.array-cell { display: flex; flex-direction: column; align-items: center; gap: 3px; transition: all 0.3s ease; }
+.array-value {
+    width: 48px; height: 42px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.03);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono); font-size: 0.85rem; font-weight: 700;
+    color: var(--text-primary); transition: all 0.3s ease;
+}
+.array-value.root { border-color: var(--accent-green); background: var(--accent-green-bg); color: var(--accent-green); }
+.array-value.highlight { border-color: var(--accent-amber); background: var(--accent-amber-bg); color: var(--accent-amber); }
+.array-value.swap { border-color: var(--accent-red); background: var(--accent-red-bg); color: var(--accent-red); }
+.array-value.new-node { border-color: var(--accent-purple); background: var(--accent-purple-bg); color: var(--accent-purple); animation: arrayCellPop 0.4s ease; }
+@keyframes arrayCellPop { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.array-index { font-size: 0.58rem; font-weight: 600; color: var(--text-muted); font-family: var(--font-mono); opacity: 0.7; }
+.array-bracket { font-family: var(--font-mono); font-size: 1.3rem; font-weight: 300; color: rgba(255,255,255,0.15); margin: 0 3px; align-self: center; }
+
+/* ===== Info Bar ===== */
+.info-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 20px;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem; color: var(--text-secondary);
+    min-height: 48px; transition: all 0.3s ease;
+    backdrop-filter: blur(20px);
+}
+.info-bar.action-add { border-color: rgba(0, 230, 118, 0.2); background: rgba(0, 230, 118, 0.03); }
+.info-bar.action-poll { border-color: rgba(255, 82, 82, 0.2); background: rgba(255, 82, 82, 0.03); }
+.info-bar.action-swap { border-color: rgba(255, 193, 7, 0.25); background: rgba(255, 193, 7, 0.04); }
+.info-bar.action-peek { border-color: rgba(255, 193, 7, 0.2); background: rgba(255, 193, 7, 0.03); }
+.info-text { font-weight: 500; line-height: 1.5; }
+.info-text strong { color: var(--text-primary); font-weight: 700; }
+
+/* ===== Log ===== */
+.log-panel { max-height: 220px; }
+.log-container { padding: 10px 16px; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
+.log-container::-webkit-scrollbar { width: 3px; }
+.log-container::-webkit-scrollbar-track { background: transparent; }
+.log-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+.log-entry { font-family: var(--font-mono); font-size: 0.68rem; padding: 4px 10px; border-radius: var(--radius-sm); line-height: 1.6; color: var(--text-secondary); }
+.log-entry.log-add { color: var(--accent-green); background: var(--accent-green-bg); }
+.log-entry.log-poll { color: var(--accent-red); background: var(--accent-red-bg); }
+.log-entry.log-swap { color: var(--accent-amber); background: var(--accent-amber-bg); }
+.log-entry.log-peek { color: var(--accent-amber); background: var(--accent-amber-bg); }
+.log-entry.log-info { color: var(--text-muted); }
+
+/* ===== Responsive ===== */
+@media (max-width: 900px) {
+    .header { flex-direction: column; align-items: flex-start; }
+    .header-right { width: 100%; overflow-x: auto; }
+    .controls-bar { flex-direction: column; align-items: flex-start; }
+    .controls-left, .controls-right { width: 100%; }
+}
+@media (max-width: 600px) {
+    .app { padding: 12px 14px; gap: 12px; }
+    .node-circle { width: 40px; height: 40px; font-size: 0.8rem; }
+    .array-value { width: 40px; height: 36px; font-size: 0.75rem; }
+    .formula-badge { display: none; }
+    .stepper-btn { width: 32px; height: 36px; }
+    .input-group input { width: 60px; padding: 7px 6px; }
+}
+
+.btn:disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                        <line x1="12" y1="22" x2="12" y2="15.5"/>
+                        <polyline points="22 8.5 12 15.5 2 8.5"/>
+                        <polyline points="2 15.5 12 8.5 22 15.5"/>
+                        <line x1="12" y1="2" x2="12" y2="8.5"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>PriorityQueue Visualizer</h1>
+                    <p class="subtitle">Java Collections Framework — Binary Min-Heap</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="formula-badge"><span class="formula-label">Parent</span><code>(i − 1) / 2</code></div>
+                <div class="formula-badge"><span class="formula-label">Left</span><code>2i + 1</code></div>
+                <div class="formula-badge"><span class="formula-label">Right</span><code>2i + 2</code></div>
+            </div>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls-bar">
+            <div class="controls-left">
+                <div class="input-group">
+                    <button class="stepper-btn" id="decBtn" type="button" aria-label="Decrease value">−</button>
+                    <input type="number" id="valueInput" placeholder="0" min="-999" max="999">
+                    <button class="stepper-btn" id="incBtn" type="button" aria-label="Increase value" style="border-radius:0">+</button>
+                    <button id="addBtn" class="btn btn-add">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Add
+                    </button>
+                </div>
+                <button id="pollBtn" class="btn btn-poll">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Poll
+                </button>
+                <button id="peekBtn" class="btn btn-peek">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    Peek
+                </button>
+                <button id="clearBtn" class="btn btn-clear">Clear</button>
+            </div>
+            <div class="controls-right">
+                <button id="sampleBtn" class="btn btn-sample">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Load Class Example
+                </button>
+                <div class="heap-toggle">
+                    <span class="toggle-label" id="minLabel">Min-Heap</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="heapToggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label" id="maxLabel">Max-Heap</span>
+                </div>
+                <div class="speed-control">
+                    <label>Speed</label>
+                    <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="panel tree-panel">
+                <div class="panel-header">
+                    <h2>🌳 Tree View (Logical Structure)</h2>
+                    <span class="badge" id="sizeLabel">Size: 0</span>
+                </div>
+                <div class="tree-container" id="treeContainer">
+                    <svg id="treeSvg" class="tree-svg"></svg>
+                    <div id="treeNodes" class="tree-nodes"></div>
+                    <div class="empty-state" id="emptyState">
+                        <div class="empty-icon">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                                <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/>
+                            </svg>
+                        </div>
+                        <p>Add elements to visualize the heap</p>
+                        <p class="hint">Or click <strong>"Load Class Example"</strong> to see [10, 5, 30, 20, 25, 18, 9]</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel array-panel">
+                <div class="panel-header">
+                    <h2>📦 Array View (Physical Storage)</h2>
+                    <code class="code-hint">System.out.println(pq) prints this</code>
+                </div>
+                <div class="array-container" id="arrayContainer">
+                    <div class="array-empty" id="arrayEmpty">Empty — internal Object[] queue = new Object[11]</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Bar -->
+        <div class="info-bar" id="infoBar">
+            <div class="info-icon">ℹ️</div>
+            <div class="info-text" id="infoText">Ready. Add elements or load the class example to begin.</div>
+        </div>
+
+        <!-- Operation Log -->
+        <div class="panel log-panel">
+            <div class="panel-header">
+                <h2>📋 Operation Log</h2>
+                <button id="clearLogBtn" class="btn btn-clear-log">Clear</button>
+            </div>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry log-info">Visualizer ready. Default capacity = 11, Min-Heap mode.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+/**
+ * Binary Heap — supports min-heap and max-heap with operation tracking for animation.
+ */
+class BinaryHeap {
+    constructor(isMaxHeap = false) {
+        this.heap = [];
+        this.isMaxHeap = isMaxHeap;
+    }
+    get size() { return this.heap.length; }
+    get isEmpty() { return this.heap.length === 0; }
+    compare(a, b) { return this.isMaxHeap ? b - a : a - b; }
+    parentIndex(i) { return Math.floor((i - 1) / 2); }
+    leftChildIndex(i) { return 2 * i + 1; }
+    rightChildIndex(i) { return 2 * i + 2; }
+    hasParent(i) { return i > 0; }
+    hasLeftChild(i) { return this.leftChildIndex(i) < this.heap.length; }
+    hasRightChild(i) { return this.rightChildIndex(i) < this.heap.length; }
+    swap(i, j) { [this.heap[i], this.heap[j]] = [this.heap[j], this.heap[i]]; }
+
+    insert(value) {
+        const ops = [];
+        this.heap.push(value);
+        const insertedIdx = this.heap.length - 1;
+        ops.push({ type: 'place', index: insertedIdx, value, heapSnapshot: [...this.heap], message: `Placed ${value} at index ${insertedIdx} (end of array)` });
+        let i = insertedIdx;
+        while (this.hasParent(i)) {
+            const pi = this.parentIndex(i);
+            ops.push({ type: 'compare', childIndex: i, parentIndex: pi, childValue: this.heap[i], parentValue: this.heap[pi], heapSnapshot: [...this.heap], message: `Compare: ${this.heap[i]} (idx ${i}) with parent ${this.heap[pi]} (idx ${pi})` });
+            if (this.compare(this.heap[i], this.heap[pi]) < 0) {
+                ops.push({ type: 'swap', index1: i, index2: pi, value1: this.heap[i], value2: this.heap[pi], heapSnapshot: [...this.heap], message: `Swap: ${this.heap[i]} ↔ ${this.heap[pi]} (child ${this.isMaxHeap ? '>' : '<'} parent → swap!)` });
+                this.swap(i, pi);
+                ops[ops.length - 1].heapAfterSwap = [...this.heap];
+                i = pi;
+            } else {
+                ops.push({ type: 'stop', index: i, value: this.heap[i], heapSnapshot: [...this.heap], message: `${this.heap[i]} ${this.isMaxHeap ? '≤' : '≥'} ${this.heap[pi]} → Heap property satisfied. Stop.` });
+                break;
+            }
+        }
+        if (i === 0 && ops[ops.length - 1]?.type !== 'stop') {
+            ops.push({ type: 'root-reached', index: 0, value: this.heap[0], heapSnapshot: [...this.heap], message: `${this.heap[0]} reached the root. Heapify-up complete.` });
+        }
+        return ops;
+    }
+
+    poll() {
+        if (this.isEmpty) return null;
+        const ops = [];
+        const root = this.heap[0];
+        if (this.heap.length === 1) {
+            this.heap.pop();
+            ops.push({ type: 'remove-root', value: root, heapSnapshot: [], message: `poll() → Removed root ${root}. Heap is now empty.` });
+            return { value: root, ops };
+        }
+        const last = this.heap.pop();
+        ops.push({ type: 'remove-root', value: root, lastValue: last, lastIndex: this.heap.length, heapSnapshot: [...this.heap], message: `poll() → Removed root ${root}. Moving LAST element ${last} to root.` });
+        this.heap[0] = last;
+        ops.push({ type: 'replace-root', value: last, heapSnapshot: [...this.heap], message: `${last} is now at the root (index 0). Starting heapify-down...` });
+        let i = 0;
+        while (this.hasLeftChild(i)) {
+            let smallerChildIdx = this.leftChildIndex(i);
+            const rightIdx = this.rightChildIndex(i);
+            if (this.hasRightChild(i) && this.compare(this.heap[rightIdx], this.heap[smallerChildIdx]) < 0) smallerChildIdx = rightIdx;
+            ops.push({ type: 'compare-down', parentIndex: i, childIndex: smallerChildIdx, parentValue: this.heap[i], childValue: this.heap[smallerChildIdx], heapSnapshot: [...this.heap], message: `Compare: ${this.heap[i]} (idx ${i}) with ${this.isMaxHeap ? 'larger' : 'smaller'} child ${this.heap[smallerChildIdx]} (idx ${smallerChildIdx})` });
+            if (this.compare(this.heap[smallerChildIdx], this.heap[i]) < 0) {
+                ops.push({ type: 'swap-down', index1: i, index2: smallerChildIdx, value1: this.heap[i], value2: this.heap[smallerChildIdx], heapSnapshot: [...this.heap], message: `Swap: ${this.heap[i]} ↔ ${this.heap[smallerChildIdx]} (heapify-down)` });
+                this.swap(i, smallerChildIdx);
+                ops[ops.length - 1].heapAfterSwap = [...this.heap];
+                i = smallerChildIdx;
+            } else {
+                ops.push({ type: 'stop-down', index: i, value: this.heap[i], heapSnapshot: [...this.heap], message: `${this.heap[i]} ${this.isMaxHeap ? '≥' : '≤'} children → Heap property satisfied. Stop.` });
+                break;
+            }
+        }
+        if (!this.hasLeftChild(i) && ops[ops.length - 1]?.type !== 'stop-down') {
+            ops.push({ type: 'leaf-reached', index: i, value: this.heap[i], heapSnapshot: [...this.heap], message: `${this.heap[i]} reached a leaf position. Heapify-down complete.` });
+        }
+        return { value: root, ops };
+    }
+
+    peek() { return this.isEmpty ? null : this.heap[0]; }
+    toArray() { return [...this.heap]; }
+    clear() { this.heap = []; }
+}
+
+/**
+ * Visualizer — renders heap as interactive tree + array with step-by-step animations.
+ */
+(function () {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const decBtn = $('decBtn'), incBtn = $('incBtn');
+    const valueInput = $('valueInput'), addBtn = $('addBtn'), pollBtn = $('pollBtn'), peekBtn = $('peekBtn'), clearBtn = $('clearBtn'), sampleBtn = $('sampleBtn'), heapToggle = $('heapToggle'), speedSlider = $('speedSlider'), treeContainer = $('treeContainer'), treeSvg = $('treeSvg'), treeNodes = $('treeNodes'), emptyState = $('emptyState'), arrayContainer = $('arrayContainer'), infoBar = $('infoBar'), infoText = $('infoText'), logContainer = $('logContainer'), sizeLabel = $('sizeLabel'), minLabel = $('minLabel'), maxLabel = $('maxLabel'), clearLogBtn = $('clearLogBtn');
+
+    let heap = new BinaryHeap(false);
+    let animating = false;
+
+    function getDelay() { const s = [1200, 800, 550, 350, 200]; return s[parseInt(speedSlider.value) - 1] || 550; }
+    function setAnimating(v) { animating = v; addBtn.disabled = v; pollBtn.disabled = v || heap.isEmpty; peekBtn.disabled = v || heap.isEmpty; clearBtn.disabled = v; sampleBtn.disabled = v; heapToggle.disabled = v; }
+
+    function log(message, type = 'info') {
+        const e = document.createElement('div');
+        e.className = `log-entry log-${type}`;
+        const t = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        e.textContent = `[${t}] ${message}`;
+        logContainer.appendChild(e);
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+    function setInfo(msg, cls = '') { infoText.innerHTML = msg; infoBar.className = 'info-bar' + (cls ? ` action-${cls}` : ''); }
+
+    function getNodePositions(arr) {
+        if (!arr.length) return [];
+        const cw = treeContainer.clientWidth - 48;
+        const depth = Math.floor(Math.log2(arr.length)) + 1;
+        const levelHeight = 90;
+        const topPad = 40;
+        const totalHeight = topPad + (depth - 1) * levelHeight + 60;
+        // Dynamically set container height
+        treeContainer.style.minHeight = Math.max(320, totalHeight) + 'px';
+        const positions = [];
+        for (let i = 0; i < arr.length; i++) {
+            const level = Math.floor(Math.log2(i + 1));
+            const nInLevel = Math.pow(2, level);
+            const posInLevel = i - (nInLevel - 1);
+            const sw = cw / nInLevel;
+            positions.push({
+                x: sw * posInLevel + sw / 2,
+                y: topPad + level * levelHeight,
+                level, index: i, value: arr[i]
+            });
+        }
+        return positions;
+    }
+
+    function renderTree(arr, hl = {}) {
+        const pos = getNodePositions(arr);
+        if (!pos.length) {
+            emptyState.classList.remove('hidden');
+            treeNodes.innerHTML = ''; treeSvg.innerHTML = '';
+            treeContainer.style.minHeight = '320px';
+            return;
+        }
+        emptyState.classList.add('hidden');
+        const R = 25; // node radius
+        // SVG defs with arrowhead markers
+        let svg = '<defs>';
+        svg += '<marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="rgba(255,255,255,0.18)"/></marker>';
+        svg += '<marker id="arrow-hl" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><path d="M0,0 L10,3.5 L0,7 Z" fill="var(--edge-highlight)"/></marker>';
+        svg += '</defs>';
+        for (let i = 1; i < pos.length; i++) {
+            const pi = Math.floor((i - 1) / 2);
+            const p = pos[pi], c = pos[i];
+            const hi = hl.edges && hl.edges.some(e => (e[0] === pi && e[1] === i) || (e[0] === i && e[1] === pi));
+            // Vector from parent center to child center
+            const dx = c.x - p.x, dy = c.y - p.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist === 0) continue;
+            const ux = dx / dist, uy = dy / dist;
+            // Start at parent circle edge, end just before child circle edge
+            const sx = p.x + ux * R;
+            const sy = p.y + uy * R;
+            const ex = c.x - ux * (R + 5);
+            const ey = c.y - uy * (R + 5);
+            const cls = hi ? 'highlight' : '';
+            const marker = hi ? 'url(#arrow-hl)' : 'url(#arrow)';
+            svg += `<path d="M${sx.toFixed(1)},${sy.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}" class="${cls}" marker-end="${marker}"/>`;
+        }
+        treeSvg.innerHTML = svg;
+        let html = '';
+        for (const p of pos) {
+            let cls = '';
+            if (p.index === 0 && !hl.swap?.includes(0) && !hl.highlight?.includes(0) && !hl.newNode?.includes(0) && !hl.peek?.includes(0)) cls = 'root';
+            if (hl.swap?.includes(p.index)) cls = 'swap';
+            if (hl.highlight?.includes(p.index)) cls = 'highlight';
+            if (hl.newNode?.includes(p.index)) cls = 'new-node';
+            if (hl.peek?.includes(p.index)) cls = 'peek-highlight';
+            html += `<div class="tree-node" style="left:${p.x - R}px;top:${p.y - R}px;"><div class="node-circle ${cls}">${p.value}</div><span class="node-index">[${p.index}]</span></div>`;
+        }
+        treeNodes.innerHTML = html;
+    }
+
+    function renderArray(arr, hl = {}) {
+        if (!arr.length) { arrayContainer.innerHTML = '<div class="array-empty">Empty — internal Object[] queue = new Object[11]</div>'; return; }
+        let html = '<span class="array-bracket">[</span>';
+        for (let i = 0; i < arr.length; i++) {
+            let cls = '';
+            if (i === 0 && !hl.swap?.includes(0) && !hl.highlight?.includes(0) && !hl.newNode?.includes(0)) cls = 'root';
+            if (hl.swap?.includes(i)) cls = 'swap';
+            if (hl.highlight?.includes(i)) cls = 'highlight';
+            if (hl.newNode?.includes(i)) cls = 'new-node';
+            html += `<div class="array-cell"><div class="array-value ${cls}">${arr[i]}</div><span class="array-index">${i}</span></div>`;
+        }
+        html += '<span class="array-bracket">]</span>';
+        arrayContainer.innerHTML = html;
+    }
+
+    function fullRender(hl = {}) { const a = heap.toArray(); renderTree(a, hl); renderArray(a, hl); sizeLabel.textContent = `Size: ${a.length}`; pollBtn.disabled = heap.isEmpty || animating; peekBtn.disabled = heap.isEmpty || animating; }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    async function animateOps(ops, logType = 'add') {
+        const d = getDelay();
+        for (const op of ops) {
+            switch (op.type) {
+                case 'place': renderTree(op.heapSnapshot, { newNode: [op.index] }); renderArray(op.heapSnapshot, { newNode: [op.index] }); setInfo(`<strong>Added ${op.value}</strong> at index ${op.index} (end of array). Starting heapify-up...`, 'add'); log(op.message, logType); await sleep(d); break;
+                case 'compare': renderTree(op.heapSnapshot, { highlight: [op.childIndex, op.parentIndex], edges: [[op.parentIndex, op.childIndex]] }); renderArray(op.heapSnapshot, { highlight: [op.childIndex, op.parentIndex] }); setInfo(`Comparing <strong>${op.childValue}</strong> (idx ${op.childIndex}) with parent <strong>${op.parentValue}</strong> (idx ${op.parentIndex})`, 'swap'); log(op.message, 'info'); await sleep(d * 0.7); break;
+                case 'swap': renderTree(op.heapSnapshot, { swap: [op.index1, op.index2], edges: [[Math.min(op.index1, op.index2), Math.max(op.index1, op.index2)]] }); renderArray(op.heapSnapshot, { swap: [op.index1, op.index2] }); setInfo(`<strong>Swap!</strong> ${op.value1} ↔ ${op.value2} (child ${heap.isMaxHeap ? '>' : '<'} parent)`, 'swap'); log(op.message, 'swap'); await sleep(d * 0.5); renderTree(op.heapAfterSwap, {}); renderArray(op.heapAfterSwap, {}); await sleep(d * 0.5); break;
+                case 'stop': case 'root-reached': renderTree(op.heapSnapshot, { highlight: [op.index] }); renderArray(op.heapSnapshot, { highlight: [op.index] }); setInfo(`<strong>${op.type === 'root-reached' ? 'Reached root' : 'Heap property OK'}.</strong> ${op.message}`, 'add'); log(op.message, 'info'); await sleep(d * 0.6); break;
+                case 'remove-root': renderTree(op.heapSnapshot, {}); renderArray(op.heapSnapshot, {}); setInfo(`<strong>poll() →</strong> Removed root <strong>${op.value}</strong>. Moving LAST element <strong>${op.lastValue ?? ''}</strong> to root.`, 'poll'); log(op.message, 'poll'); await sleep(d); break;
+                case 'replace-root': renderTree(op.heapSnapshot, { newNode: [0] }); renderArray(op.heapSnapshot, { newNode: [0] }); setInfo(`<strong>${op.value}</strong> placed at root. Starting heapify-down...`, 'poll'); log(op.message, 'info'); await sleep(d); break;
+                case 'compare-down': renderTree(op.heapSnapshot, { highlight: [op.parentIndex, op.childIndex], edges: [[op.parentIndex, op.childIndex]] }); renderArray(op.heapSnapshot, { highlight: [op.parentIndex, op.childIndex] }); setInfo(`Comparing <strong>${op.parentValue}</strong> (idx ${op.parentIndex}) with ${heap.isMaxHeap ? 'larger' : 'smaller'} child <strong>${op.childValue}</strong> (idx ${op.childIndex})`, 'swap'); log(op.message, 'info'); await sleep(d * 0.7); break;
+                case 'swap-down': renderTree(op.heapSnapshot, { swap: [op.index1, op.index2], edges: [[op.index1, op.index2]] }); renderArray(op.heapSnapshot, { swap: [op.index1, op.index2] }); setInfo(`<strong>Swap!</strong> ${op.value1} ↔ ${op.value2} (heapify-down)`, 'swap'); log(op.message, 'swap'); await sleep(d * 0.5); renderTree(op.heapAfterSwap, {}); renderArray(op.heapAfterSwap, {}); await sleep(d * 0.5); break;
+                case 'stop-down': case 'leaf-reached': renderTree(op.heapSnapshot, { highlight: [op.index] }); renderArray(op.heapSnapshot, { highlight: [op.index] }); setInfo(`<strong>${op.type === 'leaf-reached' ? 'Reached leaf' : 'Heap property OK'}.</strong> ${op.message}`, 'poll'); log(op.message, 'info'); await sleep(d * 0.6); break;
+            }
+            sizeLabel.textContent = `Size: ${heap.size}`;
+        }
+    }
+
+    async function handleAdd() { const v = parseInt(valueInput.value); if (isNaN(v)) { setInfo('⚠️ Enter a valid integer value.', ''); return; } valueInput.value = ''; valueInput.focus(); setAnimating(true); const ops = heap.insert(v); log(`pq.add(${v})`, 'add'); await animateOps(ops, 'add'); setInfo(`✅ <strong>${v}</strong> added successfully. Heap size: <strong>${heap.size}</strong>`, 'add'); fullRender(); setAnimating(false); }
+    async function handlePoll() { if (heap.isEmpty) return; setAnimating(true); const r = heap.poll(); log(`pq.poll() → ${r.value}`, 'poll'); await animateOps(r.ops, 'poll'); setInfo(`🗑️ <strong>poll()</strong> returned <strong>${r.value}</strong>. Heap size: <strong>${heap.size}</strong>`, 'poll'); fullRender(); setAnimating(false); }
+    async function handlePeek() { if (heap.isEmpty) return; setAnimating(true); const v = heap.peek(); log(`pq.peek() → ${v}`, 'peek'); setInfo(`🔍 <strong>peek()</strong> → <strong>${v}</strong> (root element, NOT removed). O(1) operation.`, 'peek'); renderTree(heap.toArray(), { peek: [0] }); renderArray(heap.toArray(), { highlight: [0] }); await sleep(1500); fullRender(); setAnimating(false); }
+    function handleClear() { heap.clear(); log('pq.clear() — All elements removed', 'info'); setInfo('🧹 Heap cleared. Add elements to begin.', ''); fullRender(); }
+    async function handleSample() { heap.clear(); fullRender(); setAnimating(true); const vals = [10, 5, 30, 20, 25, 18, 9]; log(`Loading class example: [${vals.join(', ')}]`, 'info'); setInfo(`Loading class example: <strong>[${vals.join(', ')}]</strong>`, 'add'); await sleep(500); for (const v of vals) { const ops = heap.insert(v); log(`pq.add(${v})`, 'add'); await animateOps(ops, 'add'); fullRender(); await sleep(200); } setInfo(`✅ Sample loaded. Heap: <strong>[${heap.toArray().join(', ')}]</strong> — Try <strong>poll()</strong> to see sorted output!`, 'add'); fullRender(); setAnimating(false); }
+    function handleToggle() { const m = heapToggle.checked; minLabel.classList.toggle('active', !m); maxLabel.classList.toggle('active', m); const vals = heap.toArray(); heap = new BinaryHeap(m); for (const v of vals) heap.insert(v); log(`Switched to ${m ? 'MAX' : 'MIN'}-Heap mode${vals.length ? '. Rebuilt heap.' : '.'}`, 'info'); setInfo(`Switched to <strong>${m ? 'Max-Heap' : 'Min-Heap'}</strong> mode. ${m ? 'Largest' : 'Smallest'} element at root.`, ''); fullRender(); }
+
+    // Stepper buttons for value increment/decrement
+    decBtn.addEventListener('click', () => { const v = parseInt(valueInput.value) || 0; valueInput.value = v - 1; valueInput.focus(); });
+    incBtn.addEventListener('click', () => { const v = parseInt(valueInput.value) || 0; valueInput.value = v + 1; valueInput.focus(); });
+
+    valueInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !animating) handleAdd(); });
+    addBtn.addEventListener('click', handleAdd);
+    pollBtn.addEventListener('click', handlePoll);
+    peekBtn.addEventListener('click', handlePeek);
+    clearBtn.addEventListener('click', handleClear);
+    sampleBtn.addEventListener('click', handleSample);
+    heapToggle.addEventListener('change', handleToggle);
+    clearLogBtn.addEventListener('click', () => { logContainer.innerHTML = ''; log('Log cleared.', 'info'); });
+
+    let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => fullRender(), 150); });
+    minLabel.classList.add('active');
+    fullRender();
+})();
+    </script>
+</body>
+</html>

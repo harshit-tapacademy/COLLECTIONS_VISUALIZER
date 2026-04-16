@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeSet Visualizer — Red-Black Tree</title>
+    <meta name="description" content="Interactive Red-Black Tree visualizer for Java TreeSet. Animated insert, search, delete with rotations and recoloring.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+:root{
+    --bg-primary:#000;--bg-secondary:#0a0a0a;--bg-panel:#0d0d0d;
+    --border:rgba(255,255,255,0.06);--border-subtle:rgba(255,255,255,0.04);--border-glow:rgba(255,255,255,0.12);
+    --text-primary:#f0f0f0;--text-secondary:#8a8a8a;--text-muted:#555;
+    --accent-green:#4cff91;--accent-green-bg:rgba(76,255,145,0.10);
+    --accent-red:#ff5252;--accent-red-bg:rgba(255,82,82,0.08);
+    --accent-blue:#448aff;--accent-blue-bg:rgba(68,138,255,0.08);
+    --accent-amber:#ffc107;--accent-amber-bg:rgba(255,193,7,0.08);
+    --accent-purple:#b388ff;--accent-purple-bg:rgba(179,136,255,0.08);
+    --accent-cyan:#18ffff;
+    --rbt-red:#e53935;--rbt-red-glow:0 0 18px rgba(229,57,53,0.4);
+    --rbt-black:#333;--rbt-black-border:rgba(255,255,255,0.15);
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--radius-full:999px;
+    --shadow-md:0 4px 16px rgba(0,0,0,0.6);
+    --font:'Inter',-apple-system,sans-serif;--font-mono:'JetBrains Mono','Fira Code',monospace;
+    --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.app{max-width:1440px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+.header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);flex-wrap:wrap;gap:16px;backdrop-filter:blur(20px)}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-icon{width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--rbt-red),#b71c1c);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:var(--rbt-red-glow);transition:transform var(--transition)}
+.logo-icon:hover{transform:scale(1.08) rotate(-3deg)}
+.header h1{font-size:1.35rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:0.72rem;color:var(--text-muted);font-weight:500;margin-top:3px}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.formula-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-full);font-size:0.72rem;transition:all var(--transition)}
+.formula-badge:hover{background:rgba(255,255,255,0.06);border-color:var(--border-glow)}
+.formula-label{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.58rem;letter-spacing:0.1em}
+.formula-badge code{font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:0.72rem}
+
+.controls-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);gap:14px;flex-wrap:wrap;backdrop-filter:blur(20px)}
+.controls-left,.controls-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.input-group{display:flex;align-items:center;gap:0}
+.stepper-btn{width:36px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all var(--transition);font-size:1.1rem;font-weight:600;user-select:none}
+.stepper-btn:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.stepper-btn:hover{background:rgba(255,255,255,0.08);color:var(--text-primary)}
+.stepper-btn:active{transform:scale(0.95)}
+.input-group input{width:72px;padding:9px 8px;background:var(--bg-secondary);border:1px solid var(--border);border-left:none;border-right:none;color:var(--text-primary);font-family:var(--font-mono);font-size:0.9rem;font-weight:700;outline:none;text-align:center;transition:border-color var(--transition)}
+.input-group input:focus{border-color:var(--accent-blue)}
+.input-group input::placeholder{color:var(--text-muted);font-weight:400}
+.input-group input::-webkit-outer-spin-button,.input-group input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.input-group input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;font-family:var(--font);font-size:0.8rem;font-weight:600;border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);white-space:nowrap;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%);pointer-events:none;opacity:0;transition:opacity var(--transition)}
+.btn:hover::after{opacity:1}
+.btn:active{transform:scale(0.96)}
+.btn:disabled{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.btn-add{background:var(--accent-green);color:#000;border-color:var(--accent-green);font-weight:700;border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.btn-add:hover{box-shadow:0 0 24px rgba(76,255,145,0.25);filter:brightness(1.12)}
+.btn-remove{background:var(--accent-red-bg);color:var(--accent-red);border:1px solid rgba(255,82,82,0.2)}
+.btn-remove:hover{background:rgba(255,82,82,0.18);box-shadow:0 0 24px rgba(255,82,82,0.25)}
+.btn-contains{background:var(--accent-amber-bg);color:var(--accent-amber);border:1px solid rgba(255,193,7,0.2)}
+.btn-contains:hover{background:rgba(255,193,7,0.18);box-shadow:0 0 24px rgba(255,193,7,0.3)}
+.btn-nav{background:var(--accent-purple-bg);color:var(--accent-purple);border:1px solid rgba(179,136,255,0.2)}
+.btn-nav:hover{background:rgba(179,136,255,0.18);box-shadow:0 0 24px rgba(179,136,255,0.25)}
+.btn-clear{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border)}
+.btn-clear:hover{color:var(--text-secondary);background:rgba(255,255,255,0.06)}
+.btn-sample{background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple));color:white;padding:9px 18px;font-weight:700}
+.btn-sample:hover{box-shadow:0 0 24px rgba(68,138,255,0.25);filter:brightness(1.15)}
+.btn-clear-log{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border);padding:5px 12px;font-size:0.7rem}
+.speed-control{display:flex;align-items:center;gap:7px}
+.speed-control label{font-size:0.7rem;color:var(--text-muted);font-weight:600}
+.speed-control input[type="range"]{width:64px;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.08);border-radius:2px;outline:none}
+.speed-control input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent-blue);cursor:pointer;box-shadow:0 0 8px rgba(68,138,255,0.4)}
+
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-subtle);background:rgba(255,255,255,0.01);flex-wrap:wrap;gap:8px}
+.panel-header h2{font-size:0.82rem;font-weight:700;color:var(--text-secondary)}
+.badge{font-size:0.68rem;font-weight:600;padding:4px 12px;border-radius:var(--radius-full);border:1px solid}
+.badge-blue{background:var(--accent-blue-bg);color:var(--accent-blue);border-color:rgba(68,138,255,0.15)}
+.badge-red{background:rgba(229,57,53,0.1);color:#ef5350;border-color:rgba(229,57,53,0.2)}
+.legend{display:flex;align-items:center;gap:12px;font-size:0.68rem;color:var(--text-muted)}
+.legend-dot{width:14px;height:14px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+.legend-dot.red{background:var(--rbt-red);box-shadow:0 0 8px rgba(229,57,53,0.3)}
+.legend-dot.black{background:var(--rbt-black);border:1.5px solid var(--rbt-black-border)}
+
+/* Tree View */
+.tree-panel{min-height:380px}
+.tree-container{position:relative;width:100%;min-height:340px;padding:24px;overflow:auto}
+.tree-svg{position:absolute;top:24px;left:24px;width:calc(100% - 48px);height:calc(100% - 48px);pointer-events:none;overflow:visible}
+.tree-svg path{fill:none;stroke:rgba(255,255,255,0.10);stroke-width:2;transition:all 0.4s ease}
+.tree-svg path.hl{stroke:var(--accent-amber);stroke-width:2.5;filter:drop-shadow(0 0 6px rgba(255,193,7,0.5))}
+.tree-nodes{position:relative;width:100%;height:100%}
+.tree-node{position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);z-index:2}
+.node-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.88rem;font-weight:700;transition:all 0.3s ease;cursor:default}
+.node-circle.rb-red{background:var(--rbt-red);color:#fff;border:2.5px solid rgba(229,57,53,0.5);box-shadow:var(--rbt-red-glow)}
+.node-circle.rb-black{background:var(--rbt-black);color:#eee;border:2.5px solid var(--rbt-black-border);box-shadow:var(--shadow-md)}
+.node-circle.hl-search{animation:searchPulse .6s ease infinite;box-shadow:0 0 24px rgba(255,193,7,0.5)!important;border-color:var(--accent-amber)!important}
+.node-circle.hl-found{animation:foundPop .4s ease;box-shadow:0 0 28px rgba(76,255,145,0.5)!important;border-color:var(--accent-green)!important}
+.node-circle.hl-insert{animation:popIn .4s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 0 24px rgba(76,255,145,0.4)!important;border-color:var(--accent-green)!important}
+.node-circle.hl-remove{box-shadow:0 0 24px rgba(255,82,82,0.5)!important;border-color:var(--accent-red)!important;opacity:0.6}
+@keyframes searchPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes foundPop{0%{transform:scale(0.8)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes popIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+.empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-muted);font-size:0.85rem}
+.empty-state .hint{font-size:0.72rem;opacity:0.5}
+.empty-state.hidden{display:none}
+
+/* Sorted Set View */
+.sorted-container{padding:14px 20px;display:flex;align-items:center;gap:4px;overflow-x:auto;min-height:60px;flex-wrap:wrap}
+.sorted-cell{padding:6px 14px;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.82rem;font-weight:700;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:var(--text-primary);transition:all 0.3s ease}
+.sorted-cell.hl{border-color:var(--accent-green);background:var(--accent-green-bg);color:var(--accent-green)}
+.sorted-arrow{color:var(--text-muted);font-size:0.7rem;opacity:0.4}
+
+.info-bar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-secondary);min-height:48px;transition:all 0.3s ease;backdrop-filter:blur(20px)}
+.info-bar.action-add{border-color:rgba(76,255,145,0.2);background:rgba(76,255,145,0.03)}
+.info-bar.action-remove{border-color:rgba(255,82,82,0.2);background:rgba(255,82,82,0.03)}
+.info-bar.action-search{border-color:rgba(255,193,7,0.2);background:rgba(255,193,7,0.03)}
+.info-bar.action-nav{border-color:rgba(179,136,255,0.2);background:rgba(179,136,255,0.03)}
+.info-text{font-weight:500;line-height:1.5}
+.info-text strong{color:var(--text-primary);font-weight:700}
+
+.log-panel{max-height:220px}
+.log-container{padding:10px 16px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.log-container::-webkit-scrollbar{width:3px}
+.log-container::-webkit-scrollbar-track{background:transparent}
+.log-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.log-entry{font-family:var(--font-mono);font-size:0.68rem;padding:4px 10px;border-radius:var(--radius-sm);line-height:1.6}
+.log-entry.log-add{color:var(--accent-green);background:var(--accent-green-bg)}
+.log-entry.log-remove{color:var(--accent-red);background:var(--accent-red-bg)}
+.log-entry.log-search{color:var(--accent-amber);background:var(--accent-amber-bg)}
+.log-entry.log-nav{color:var(--accent-purple);background:var(--accent-purple-bg)}
+.log-entry.log-info{color:var(--text-muted)}
+
+@media(max-width:900px){.header,.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
+@media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.node-circle{width:36px;height:36px;font-size:0.75rem}}
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="6" r="3"/><line x1="12" y1="9" x2="12" y2="13"/>
+                    <circle cx="7" cy="17" r="3"/><circle cx="17" cy="17" r="3"/>
+                    <line x1="12" y1="13" x2="7" y2="14"/><line x1="12" y1="13" x2="17" y2="14"/>
+                </svg>
+            </div>
+            <div>
+                <h1>TreeSet Visualizer</h1>
+                <p class="subtitle">Java Collections Framework — Red-Black Tree (Sorted Set)</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="formula-badge"><span class="formula-label">Backed by</span><code>TreeMap (RBT)</code></div>
+            <div class="formula-badge"><span class="formula-label">All ops</span><code>O(log n)</code></div>
+            <div class="formula-badge"><span class="formula-label">Order</span><code>Natural / Comparator</code></div>
+        </div>
+    </header>
+
+    <div class="controls-bar">
+        <div class="controls-left">
+            <div class="input-group">
+                <button class="stepper-btn" id="decBtn" type="button">−</button>
+                <input type="number" id="valueInput" placeholder="0" min="-999" max="999">
+                <button class="stepper-btn" id="incBtn" type="button" style="border-radius:0">+</button>
+                <button id="addBtn" class="btn btn-add">add</button>
+            </div>
+            <button id="removeBtn" class="btn btn-remove">remove</button>
+            <button id="containsBtn" class="btn btn-contains">contains</button>
+            <button id="firstBtn" class="btn btn-nav">first</button>
+            <button id="lastBtn" class="btn btn-nav">last</button>
+            <button id="floorBtn" class="btn btn-nav">floor</button>
+            <button id="ceilingBtn" class="btn btn-nav">ceiling</button>
+            <button id="clearBtn" class="btn btn-clear">Clear</button>
+        </div>
+        <div class="controls-right">
+            <button id="sampleBtn" class="btn btn-sample">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Load Example
+            </button>
+            <div class="speed-control">
+                <label>Speed</label>
+                <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tree View -->
+    <div class="panel tree-panel">
+        <div class="panel-header">
+            <h2>🌲 Red-Black Tree (Internal Structure)</h2>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <div class="legend"><span class="legend-dot red"></span>Red Node <span class="legend-dot black"></span>Black Node</div>
+                <span class="badge badge-blue" id="sizeLabel">Size: 0</span>
+                <span class="badge badge-red" id="heightLabel">Height: 0</span>
+            </div>
+        </div>
+        <div class="tree-container" id="treeContainer">
+            <svg id="treeSvg" class="tree-svg"></svg>
+            <div id="treeNodes" class="tree-nodes"></div>
+            <div class="empty-state" id="emptyState">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                    <circle cx="12" cy="6" r="3"/><line x1="12" y1="9" x2="12" y2="13"/>
+                    <circle cx="7" cy="17" r="3"/><circle cx="17" cy="17" r="3"/>
+                </svg>
+                <p>Add elements to visualize the Red-Black Tree</p>
+                <p class="hint">Or click <strong>"Load Example"</strong> for a demo</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sorted View -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2>📊 Sorted Set View (In-Order Traversal)</h2>
+            <code style="font-family:var(--font-mono);font-size:0.62rem;color:var(--text-muted);padding:4px 10px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border)">for (Integer x : treeSet) → sorted</code>
+        </div>
+        <div class="sorted-container" id="sortedContainer">
+            <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem">{ empty }</span>
+        </div>
+    </div>
+
+    <div class="info-bar" id="infoBar">
+        <div>ℹ️</div>
+        <div class="info-text" id="infoText">Ready. Add elements or load the example to begin.</div>
+    </div>
+
+    <div class="panel log-panel">
+        <div class="panel-header">
+            <h2>📋 Operation Log</h2>
+            <button id="clearLogBtn" class="btn btn-clear-log">Clear</button>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">Visualizer ready. TreeSet backed by Red-Black Tree.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===== Red-Black Tree ===== */
+const RED = true, BLACK = false;
+class RBNode {
+    constructor(val, color = RED) { this.val = val; this.color = color; this.left = null; this.right = null; this.parent = null; }
+}
+
+class RedBlackTree {
+    constructor() { this.root = null; this._size = 0; }
+    get size() { return this._size; }
+    get isEmpty() { return this._size === 0; }
+
+    _isRed(n) { return n !== null && n.color === RED; }
+    _rotateLeft(x) {
+        const y = x.right; x.right = y.left;
+        if (y.left) y.left.parent = x;
+        y.parent = x.parent;
+        if (!x.parent) this.root = y;
+        else if (x === x.parent.left) x.parent.left = y;
+        else x.parent.right = y;
+        y.left = x; x.parent = y;
+    }
+    _rotateRight(x) {
+        const y = x.left; x.left = y.right;
+        if (y.right) y.right.parent = x;
+        y.parent = x.parent;
+        if (!x.parent) this.root = y;
+        else if (x === x.parent.right) x.parent.right = y;
+        else x.parent.left = y;
+        y.right = x; x.parent = y;
+    }
+
+    insert(val) {
+        const path = [];
+        const fixes = [];
+        // BST insert
+        const n = new RBNode(val, RED);
+        if (!this.root) { this.root = n; n.color = BLACK; this._size++; fixes.push({ type: 'insert', node: val, msg: `Inserted ${val} as root (colored BLACK)` }); return { path: [val], fixes, duplicate: false }; }
+        let cur = this.root, par = null;
+        while (cur) {
+            path.push(cur.val);
+            par = cur;
+            if (val < cur.val) cur = cur.left;
+            else if (val > cur.val) cur = cur.right;
+            else return { path, fixes: [{ type: 'duplicate', node: val, msg: `${val} already exists — TreeSet rejects duplicates` }], duplicate: true };
+        }
+        n.parent = par;
+        if (val < par.val) par.left = n; else par.right = n;
+        this._size++;
+        fixes.push({ type: 'insert', node: val, msg: `Inserted ${val} as RED node (child of ${par.val})` });
+        // Fix violations
+        this._fixInsert(n, fixes);
+        return { path, fixes, duplicate: false };
+    }
+
+    _fixInsert(z, fixes) {
+        while (z.parent && z.parent.color === RED) {
+            const gp = z.parent.parent;
+            if (!gp) break;
+            if (z.parent === gp.left) {
+                const uncle = gp.right;
+                if (this._isRed(uncle)) {
+                    z.parent.color = BLACK; uncle.color = BLACK; gp.color = RED;
+                    fixes.push({ type: 'recolor', msg: `Recolor: ${z.parent.val}→B, uncle ${uncle.val}→B, grandparent ${gp.val}→R` });
+                    z = gp;
+                } else {
+                    if (z === z.parent.right) { z = z.parent; this._rotateLeft(z); fixes.push({ type: 'rotate', msg: `Left-rotate at ${z.val}` }); }
+                    z.parent.color = BLACK; gp.color = RED; this._rotateRight(gp);
+                    fixes.push({ type: 'rotate', msg: `Right-rotate at ${gp.val}, recolor` });
+                }
+            } else {
+                const uncle = gp.left;
+                if (this._isRed(uncle)) {
+                    z.parent.color = BLACK; uncle.color = BLACK; gp.color = RED;
+                    fixes.push({ type: 'recolor', msg: `Recolor: ${z.parent.val}→B, uncle ${uncle.val}→B, grandparent ${gp.val}→R` });
+                    z = gp;
+                } else {
+                    if (z === z.parent.left) { z = z.parent; this._rotateRight(z); fixes.push({ type: 'rotate', msg: `Right-rotate at ${z.val}` }); }
+                    z.parent.color = BLACK; gp.color = RED; this._rotateLeft(gp);
+                    fixes.push({ type: 'rotate', msg: `Left-rotate at ${gp.val}, recolor` });
+                }
+            }
+        }
+        this.root.color = BLACK;
+    }
+
+    _transplant(u, v) { if (!u.parent) this.root = v; else if (u === u.parent.left) u.parent.left = v; else u.parent.right = v; if (v) v.parent = u.parent; }
+    _minimum(n) { while (n.left) n = n.left; return n; }
+    _maximum(n) { while (n.right) n = n.right; return n; }
+
+    remove(val) {
+        const path = [];
+        let z = this.root;
+        while (z) { path.push(z.val); if (val < z.val) z = z.left; else if (val > z.val) z = z.right; else break; }
+        if (!z) return { path, found: false, msg: `${val} not found in TreeSet` };
+        const fixes = [{ type: 'remove', node: val, msg: `Removing ${val} from tree` }];
+        let y = z, yOrigColor = y.color, x;
+        if (!z.left) { x = z.right; this._transplant(z, z.right); }
+        else if (!z.right) { x = z.left; this._transplant(z, z.left); }
+        else {
+            y = this._minimum(z.right); yOrigColor = y.color; x = y.right;
+            if (y.parent === z) { if (x) x.parent = y; }
+            else { this._transplant(y, y.right); y.right = z.right; if (y.right) y.right.parent = y; }
+            this._transplant(z, y); y.left = z.left; if (y.left) y.left.parent = y; y.color = z.color;
+            fixes.push({ type: 'replace', msg: `Replaced ${val} with successor ${y.val}` });
+        }
+        this._size--;
+        if (yOrigColor === BLACK && x) this._fixDelete(x, fixes);
+        if (this.root) this.root.color = BLACK;
+        return { path, found: true, fixes, msg: `Removed ${val}. Size = ${this._size}` };
+    }
+
+    _fixDelete(x, fixes) {
+        while (x !== this.root && x && x.color === BLACK) {
+            if (x === x.parent?.left) {
+                let w = x.parent.right;
+                if (!w) break;
+                if (this._isRed(w)) { w.color = BLACK; x.parent.color = RED; this._rotateLeft(x.parent); w = x.parent.right; fixes.push({ type: 'rotate', msg: 'Delete fix: rotate + recolor' }); }
+                if (w && !this._isRed(w.left) && !this._isRed(w.right)) { w.color = RED; x = x.parent; }
+                else { if (w && !this._isRed(w.right)) { if (w.left) w.left.color = BLACK; w.color = RED; this._rotateRight(w); w = x.parent.right; } if (w) { w.color = x.parent.color; x.parent.color = BLACK; if (w.right) w.right.color = BLACK; this._rotateLeft(x.parent); } x = this.root; }
+            } else {
+                let w = x.parent?.left;
+                if (!w) break;
+                if (this._isRed(w)) { w.color = BLACK; x.parent.color = RED; this._rotateRight(x.parent); w = x.parent.left; fixes.push({ type: 'rotate', msg: 'Delete fix: rotate + recolor' }); }
+                if (w && !this._isRed(w.right) && !this._isRed(w.left)) { w.color = RED; x = x.parent; }
+                else { if (w && !this._isRed(w.left)) { if (w.right) w.right.color = BLACK; w.color = RED; this._rotateLeft(w); w = x.parent.left; } if (w) { w.color = x.parent.color; x.parent.color = BLACK; if (w.left) w.left.color = BLACK; this._rotateRight(x.parent); } x = this.root; }
+            }
+        }
+        if (x) x.color = BLACK;
+    }
+
+    contains(val) { const path = []; let n = this.root; while (n) { path.push(n.val); if (val < n.val) n = n.left; else if (val > n.val) n = n.right; else return { found: true, path }; } return { found: false, path }; }
+    first() { if (!this.root) return null; return this._minimum(this.root).val; }
+    last() { if (!this.root) return null; return this._maximum(this.root).val; }
+    floor(val) { let res = null, n = this.root; while (n) { if (val === n.val) return n.val; if (val < n.val) n = n.left; else { res = n.val; n = n.right; } } return res; }
+    ceiling(val) { let res = null, n = this.root; while (n) { if (val === n.val) return n.val; if (val > n.val) n = n.right; else { res = n.val; n = n.left; } } return res; }
+    height(n = this.root) { if (!n) return 0; return 1 + Math.max(this.height(n.left), this.height(n.right)); }
+    inOrder(n = this.root, arr = []) { if (!n) return arr; this.inOrder(n.left, arr); arr.push(n.val); this.inOrder(n.right, arr); return arr; }
+    clear() { this.root = null; this._size = 0; }
+}
+
+/* ===== Visualizer ===== */
+(function() {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const decBtn=$('decBtn'),incBtn=$('incBtn'),valueInput=$('valueInput');
+    const addBtn=$('addBtn'),removeBtn=$('removeBtn'),containsBtn=$('containsBtn');
+    const firstBtn=$('firstBtn'),lastBtn=$('lastBtn'),floorBtn=$('floorBtn'),ceilingBtn=$('ceilingBtn');
+    const clearBtn=$('clearBtn'),sampleBtn=$('sampleBtn'),clearLogBtn=$('clearLogBtn'),speedSlider=$('speedSlider');
+    const treeContainer=$('treeContainer'),treeSvg=$('treeSvg'),treeNodes=$('treeNodes'),emptyState=$('emptyState');
+    const sortedContainer=$('sortedContainer'),infoBar=$('infoBar'),infoText=$('infoText');
+    const logContainer=$('logContainer'),sizeLabel=$('sizeLabel'),heightLabel=$('heightLabel');
+    const allBtns=[addBtn,removeBtn,containsBtn,firstBtn,lastBtn,floorBtn,ceilingBtn,clearBtn,sampleBtn];
+
+    let tree = new RedBlackTree();
+    let animating = false;
+
+    function getDelay(){const s=[1200,800,550,350,200];return s[parseInt(speedSlider.value)-1]||550}
+    function setAnimating(v){animating=v;allBtns.forEach(b=>b.disabled=v);updateBtns()}
+    function updateBtns(){[removeBtn,containsBtn,firstBtn,lastBtn,floorBtn,ceilingBtn].forEach(b=>b.disabled=animating||tree.isEmpty)}
+
+    function logMsg(msg,type='info'){const e=document.createElement('div');e.className=`log-entry log-${type}`;const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});e.textContent=`[${t}] ${msg}`;logContainer.appendChild(e);logContainer.scrollTop=logContainer.scrollHeight}
+    function setInfo(msg,cls=''){infoText.innerHTML=msg;infoBar.className='info-bar'+(cls?` action-${cls}`:'')}
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+    /* ===== Tree Layout ===== */
+    function layoutTree(node, depth, left, right, positions) {
+        if (!node) return;
+        const x = (left + right) / 2;
+        const y = 36 + depth * 80;
+        positions.push({ x, y, val: node.val, color: node.color });
+        layoutTree(node.left, depth + 1, left, x, positions);
+        layoutTree(node.right, depth + 1, x, right, positions);
+    }
+
+    function getPositions() {
+        const positions = [];
+        const w = treeContainer.clientWidth - 48;
+        layoutTree(tree.root, 0, 0, w, positions);
+        return positions;
+    }
+
+    /* Build parent→child map for edges */
+    function getEdges(node, positions) {
+        const edges = [];
+        function walk(n) {
+            if (!n) return;
+            const pPos = positions.find(p => p.val === n.val);
+            if (n.left) { const cPos = positions.find(p => p.val === n.left.val); if (pPos && cPos) edges.push([pPos, cPos]); walk(n.left); }
+            if (n.right) { const cPos = positions.find(p => p.val === n.right.val); if (pPos && cPos) edges.push([pPos, cPos]); walk(n.right); }
+        }
+        walk(node);
+        return edges;
+    }
+
+    function renderTree(hlSet = new Set(), hlType = '') {
+        const pos = getPositions();
+        if (!pos.length) { emptyState.classList.remove('hidden'); treeNodes.innerHTML=''; treeSvg.innerHTML=''; treeContainer.style.minHeight='340px'; return; }
+        emptyState.classList.add('hidden');
+        const maxY = Math.max(...pos.map(p => p.y));
+        treeContainer.style.minHeight = Math.max(340, maxY + 80) + 'px';
+
+        const edges = getEdges(tree.root, pos);
+        const R = 22;
+        let svg = '';
+        for (const [p, c] of edges) {
+            const dx = c.x-p.x, dy = c.y-p.y, d = Math.sqrt(dx*dx+dy*dy);
+            if (d === 0) continue;
+            const ux=dx/d, uy=dy/d;
+            const sx=p.x+ux*R, sy=p.y+uy*R, ex=c.x-ux*R, ey=c.y-uy*R;
+            const isHl = hlSet.has(p.val) && hlSet.has(c.val);
+            svg += `<path d="M${sx.toFixed(1)},${sy.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}" class="${isHl?'hl':''}"/>`;
+        }
+        treeSvg.innerHTML = svg;
+
+        let html = '';
+        for (const p of pos) {
+            const colorCls = p.color === RED ? 'rb-red' : 'rb-black';
+            let extraCls = '';
+            if (hlSet.has(p.val)) {
+                if (hlType === 'search') extraCls = 'hl-search';
+                else if (hlType === 'found') extraCls = 'hl-found';
+                else if (hlType === 'insert') extraCls = 'hl-insert';
+                else if (hlType === 'remove') extraCls = 'hl-remove';
+            }
+            html += `<div class="tree-node" style="left:${p.x-R}px;top:${p.y-R}px"><div class="node-circle ${colorCls} ${extraCls}">${p.val}</div></div>`;
+        }
+        treeNodes.innerHTML = html;
+    }
+
+    function renderSorted(hlVal = null) {
+        const arr = tree.inOrder();
+        if (!arr.length) { sortedContainer.innerHTML = '<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem">{ empty }</span>'; return; }
+        let html = '';
+        for (let i = 0; i < arr.length; i++) {
+            if (i > 0) html += '<span class="sorted-arrow">→</span>';
+            html += `<span class="sorted-cell ${arr[i]===hlVal?'hl':''}">${arr[i]}</span>`;
+        }
+        sortedContainer.innerHTML = html;
+    }
+
+    function fullRender(hl = new Set(), hlType = '', hlSorted = null) {
+        renderTree(hl, hlType);
+        renderSorted(hlSorted);
+        sizeLabel.textContent = `Size: ${tree.size}`;
+        heightLabel.textContent = `Height: ${tree.height()}`;
+        updateBtns();
+    }
+
+    function getVal() { const v = parseInt(valueInput.value); if (isNaN(v)) { setInfo('⚠️ Enter a valid integer.', ''); return null; } valueInput.value = ''; valueInput.focus(); return v; }
+
+    /* ===== Operations ===== */
+    async function handleAdd() {
+        const v = getVal(); if (v === null) return;
+        setAnimating(true);
+        const d = getDelay();
+        const { path, fixes, duplicate } = tree.insert(v);
+        // Animate search path
+        for (let i = 0; i < path.length; i++) {
+            fullRender(new Set(path.slice(0, i + 1)), 'search');
+            setInfo(`🔍 Searching for position... comparing with <strong>${path[i]}</strong>`, 'add');
+            await sleep(d * 0.5);
+        }
+        if (duplicate) {
+            logMsg(fixes[0].msg, 'info');
+            setInfo(`⚠️ <strong>${v}</strong> already exists. TreeSet rejects duplicates.`, '');
+            fullRender(); setAnimating(false); return;
+        }
+        // Show insert
+        fullRender(new Set([v]), 'insert', v);
+        logMsg(fixes[0].msg, 'add');
+        await sleep(d);
+        // Show fixes
+        for (let i = 1; i < fixes.length; i++) {
+            logMsg(fixes[i].msg, 'add');
+            setInfo(`🔧 <strong>${fixes[i].type === 'recolor' ? 'Recolor' : 'Rotation'}:</strong> ${fixes[i].msg}`, 'add');
+            fullRender(new Set([v]), 'insert', v);
+            await sleep(d * 0.8);
+        }
+        setInfo(`✅ <strong>add(${v})</strong> — inserted. Size: <strong>${tree.size}</strong>, Height: <strong>${tree.height()}</strong>`, 'add');
+        fullRender(); setAnimating(false);
+    }
+
+    async function handleRemove() {
+        const v = getVal(); if (v === null) return;
+        setAnimating(true);
+        const d = getDelay();
+        const res = tree.remove(v);
+        // Animate search path
+        for (let i = 0; i < res.path.length; i++) {
+            fullRender(new Set(res.path.slice(0, i + 1)), 'search');
+            setInfo(`🔍 Searching for <strong>${v}</strong>... at node <strong>${res.path[i]}</strong>`, 'remove');
+            await sleep(d * 0.5);
+        }
+        if (!res.found) {
+            logMsg(res.msg, 'info'); setInfo(`⚠️ <strong>${v}</strong> not found in TreeSet.`, '');
+            fullRender(); setAnimating(false); return;
+        }
+        fullRender(new Set([v]), 'remove');
+        await sleep(d);
+        for (const f of res.fixes) { logMsg(f.msg, 'remove'); }
+        setInfo(`🗑️ <strong>remove(${v})</strong> — done. Size: <strong>${tree.size}</strong>`, 'remove');
+        fullRender(); setAnimating(false);
+    }
+
+    async function handleContains() {
+        const v = getVal(); if (v === null) return;
+        setAnimating(true);
+        const d = getDelay();
+        const { found, path } = tree.contains(v);
+        for (let i = 0; i < path.length; i++) {
+            fullRender(new Set(path.slice(0, i + 1)), 'search');
+            const cmp = v < path[i] ? '→ go LEFT' : v > path[i] ? '→ go RIGHT' : '→ FOUND!';
+            setInfo(`🔍 contains(${v}): comparing with <strong>${path[i]}</strong> ${cmp}`, 'search');
+            await sleep(d * 0.6);
+        }
+        if (found) {
+            logMsg(`contains(${v}) → true`, 'search');
+            setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>. Found after ${path.length} comparison(s).`, 'search');
+            fullRender(new Set([v]), 'found', v);
+        } else {
+            logMsg(`contains(${v}) → false`, 'search');
+            setInfo(`❌ <strong>contains(${v})</strong> → <strong>false</strong>. Not found after ${path.length} comparison(s).`, '');
+            fullRender();
+        }
+        await sleep(1200);
+        fullRender(); setAnimating(false);
+    }
+
+    function handleFirst() {
+        if (tree.isEmpty) return;
+        const v = tree.first(); logMsg(`first() → ${v}`, 'nav');
+        setInfo(`⬅️ <strong>first()</strong> → <strong>${v}</strong> (leftmost / smallest element). O(log n)`, 'nav');
+        fullRender(new Set([v]), 'found', v);
+    }
+    function handleLast() {
+        if (tree.isEmpty) return;
+        const v = tree.last(); logMsg(`last() → ${v}`, 'nav');
+        setInfo(`➡️ <strong>last()</strong> → <strong>${v}</strong> (rightmost / largest element). O(log n)`, 'nav');
+        fullRender(new Set([v]), 'found', v);
+    }
+    function handleFloor() {
+        const v = getVal(); if (v === null) return;
+        const r = tree.floor(v); logMsg(`floor(${v}) → ${r}`, 'nav');
+        if (r !== null) {
+            setInfo(`⬇️ <strong>floor(${v})</strong> → <strong>${r}</strong> (greatest element ≤ ${v})`, 'nav');
+            fullRender(new Set([r]), 'found', r);
+        } else { setInfo(`⬇️ <strong>floor(${v})</strong> → <strong>null</strong> (no element ≤ ${v})`, ''); fullRender(); }
+    }
+    function handleCeiling() {
+        const v = getVal(); if (v === null) return;
+        const r = tree.ceiling(v); logMsg(`ceiling(${v}) → ${r}`, 'nav');
+        if (r !== null) {
+            setInfo(`⬆️ <strong>ceiling(${v})</strong> → <strong>${r}</strong> (smallest element ≥ ${v})`, 'nav');
+            fullRender(new Set([r]), 'found', r);
+        } else { setInfo(`⬆️ <strong>ceiling(${v})</strong> → <strong>null</strong> (no element ≥ ${v})`, ''); fullRender(); }
+    }
+
+    function handleClear() { tree.clear(); logMsg('clear()', 'info'); setInfo('🧹 TreeSet cleared.', ''); fullRender(); }
+
+    async function handleSample() {
+        tree = new RedBlackTree(); fullRender(); setAnimating(true);
+        const vals = [50, 30, 70, 20, 40, 60, 80, 10, 25];
+        logMsg(`Loading: [${vals.join(', ')}]`, 'info');
+        const d = getDelay();
+        for (const v of vals) {
+            tree.insert(v);
+            fullRender(new Set([v]), 'insert', v);
+            logMsg(`add(${v})`, 'add');
+            await sleep(d * 0.5);
+            fullRender();
+            await sleep(100);
+        }
+        setInfo(`✅ Example loaded: {${tree.inOrder().join(', ')}}. Try <strong>contains</strong>, <strong>floor</strong>, <strong>ceiling</strong>!`, 'add');
+        fullRender(); setAnimating(false);
+    }
+
+    /* Events */
+    decBtn.addEventListener('click', () => { const v = parseInt(valueInput.value) || 0; valueInput.value = v - 1; });
+    incBtn.addEventListener('click', () => { const v = parseInt(valueInput.value) || 0; valueInput.value = v + 1; });
+    valueInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !animating) handleAdd(); });
+    addBtn.addEventListener('click', handleAdd);
+    removeBtn.addEventListener('click', handleRemove);
+    containsBtn.addEventListener('click', handleContains);
+    firstBtn.addEventListener('click', handleFirst);
+    lastBtn.addEventListener('click', handleLast);
+    floorBtn.addEventListener('click', handleFloor);
+    ceilingBtn.addEventListener('click', handleCeiling);
+    clearBtn.addEventListener('click', handleClear);
+    sampleBtn.addEventListener('click', handleSample);
+    clearLogBtn.addEventListener('click', () => { logContainer.innerHTML = ''; logMsg('Log cleared.', 'info'); });
+    let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => fullRender(), 150); });
+    fullRender();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArrayList Visualizer — Dynamic Array</title>
+    <meta name="description" content="Interactive visualizer for Java ArrayList. Animated add, remove, get, set with element shifting and capacity growth.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+:root {
+    --bg-primary: #000000; --bg-secondary: #0a0a0a; --bg-panel: #0d0d0d;
+    --border: rgba(255,255,255,0.06); --border-subtle: rgba(255,255,255,0.04); --border-glow: rgba(255,255,255,0.12);
+    --text-primary: #f0f0f0; --text-secondary: #8a8a8a; --text-muted: #555555;
+    --accent-green: #4cff91; --accent-green-bg: rgba(76,255,145,0.10);
+    --accent-red: #ff5252; --accent-red-bg: rgba(255,82,82,0.08);
+    --accent-blue: #448aff; --accent-blue-bg: rgba(68,138,255,0.08);
+    --accent-amber: #ffc107; --accent-amber-bg: rgba(255,193,7,0.08);
+    --accent-purple: #b388ff; --accent-purple-bg: rgba(179,136,255,0.08);
+    --accent-cyan: #18ffff; --accent-cyan-bg: rgba(24,255,255,0.08);
+    --accent-orange: #ff9100; --accent-orange-bg: rgba(255,145,0,0.08);
+    --radius-sm: 8px; --radius-md: 12px; --radius-lg: 16px; --radius-xl: 20px; --radius-full: 999px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.5); --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+    --shadow-glow-green: 0 0 24px rgba(76,255,145,0.25); --shadow-glow-blue: 0 0 24px rgba(68,138,255,0.25);
+    --shadow-glow-amber: 0 0 24px rgba(255,193,7,0.3); --shadow-glow-red: 0 0 24px rgba(255,82,82,0.25);
+    --shadow-glow-purple: 0 0 24px rgba(179,136,255,0.25); --shadow-glow-cyan: 0 0 24px rgba(24,255,255,0.25);
+    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+.app{max-width:1400px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+/* Header */
+.header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);flex-wrap:wrap;gap:16px;backdrop-filter:blur(20px)}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-icon{width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--accent-orange),var(--accent-amber));display:flex;align-items:center;justify-content:center;color:#000;box-shadow:0 0 24px rgba(255,145,0,0.3);transition:transform var(--transition)}
+.logo-icon:hover{transform:scale(1.08) rotate(-3deg)}
+.header h1{font-size:1.35rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:0.72rem;color:var(--text-muted);font-weight:500;margin-top:3px;letter-spacing:0.02em}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.formula-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-full);font-size:0.72rem;transition:border-color var(--transition),background var(--transition)}
+.formula-badge:hover{background:rgba(255,255,255,0.06);border-color:var(--border-glow)}
+.formula-label{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.58rem;letter-spacing:0.1em}
+.formula-badge code{font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:0.72rem}
+
+/* Controls */
+.controls-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);gap:14px;flex-wrap:wrap;backdrop-filter:blur(20px)}
+.controls-left,.controls-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.input-group{display:flex;align-items:center;gap:0}
+.stepper-btn{width:36px;height:40px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--text-secondary);cursor:pointer;transition:all var(--transition);font-size:1.1rem;font-weight:600;user-select:none}
+.stepper-btn:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.stepper-btn:hover{background:rgba(255,255,255,0.08);color:var(--text-primary)}
+.stepper-btn:active{background:rgba(255,255,255,0.12);transform:scale(0.95)}
+.input-group input{width:72px;padding:9px 8px;background:var(--bg-secondary);border:1px solid var(--border);border-left:none;border-right:none;color:var(--text-primary);font-family:var(--font-mono);font-size:0.9rem;font-weight:700;outline:none;text-align:center;transition:border-color var(--transition)}
+.input-group input:focus{border-color:var(--accent-blue)}
+.input-group input::placeholder{color:var(--text-muted);font-weight:400}
+.input-group input::-webkit-outer-spin-button,.input-group input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.input-group input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.idx-input{width:52px!important;border-left:1px solid var(--border)!important;border-right:1px solid var(--border)!important;border-radius:0!important}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;font-family:var(--font);font-size:0.8rem;font-weight:600;border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);white-space:nowrap;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%);pointer-events:none;opacity:0;transition:opacity var(--transition)}
+.btn:hover::after{opacity:1}
+.btn:active{transform:scale(0.96)}
+.btn:disabled{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.btn-add{background:var(--accent-green);color:#000;border-color:var(--accent-green);font-weight:700;border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.btn-add:hover{box-shadow:var(--shadow-glow-green);filter:brightness(1.12)}
+.btn-addAt{background:var(--accent-cyan);color:#000;border-color:var(--accent-cyan);font-weight:700}
+.btn-addAt:hover{box-shadow:var(--shadow-glow-cyan);filter:brightness(1.12)}
+.btn-remove{background:var(--accent-red-bg);color:var(--accent-red);border:1px solid rgba(255,82,82,0.2)}
+.btn-remove:hover{background:rgba(255,82,82,0.18);box-shadow:var(--shadow-glow-red)}
+.btn-get{background:var(--accent-amber-bg);color:var(--accent-amber);border:1px solid rgba(255,193,7,0.2)}
+.btn-get:hover{background:rgba(255,193,7,0.18);box-shadow:var(--shadow-glow-amber)}
+.btn-set{background:var(--accent-purple-bg);color:var(--accent-purple);border:1px solid rgba(179,136,255,0.2)}
+.btn-set:hover{background:rgba(179,136,255,0.18);box-shadow:var(--shadow-glow-purple)}
+.btn-clear{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border)}
+.btn-clear:hover{color:var(--text-secondary);background:rgba(255,255,255,0.06)}
+.btn-sample{background:linear-gradient(135deg,var(--accent-blue),var(--accent-purple));color:white;padding:9px 18px;font-weight:700}
+.btn-sample:hover{box-shadow:var(--shadow-glow-blue);filter:brightness(1.15)}
+.btn-clear-log{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border);padding:5px 12px;font-size:0.7rem}
+.speed-control{display:flex;align-items:center;gap:7px}
+.speed-control label{font-size:0.7rem;color:var(--text-muted);font-weight:600}
+.speed-control input[type="range"]{width:64px;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.08);border-radius:2px;outline:none}
+.speed-control input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent-blue);cursor:pointer;box-shadow:0 0 8px rgba(68,138,255,0.4)}
+
+/* Panels */
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-subtle);background:rgba(255,255,255,0.01)}
+.panel-header h2{font-size:0.82rem;font-weight:700;color:var(--text-secondary)}
+.badge{font-size:0.68rem;font-weight:600;padding:4px 12px;background:var(--accent-blue-bg);color:var(--accent-blue);border-radius:var(--radius-full);border:1px solid rgba(68,138,255,0.15)}
+.badge-orange{background:var(--accent-orange-bg);color:var(--accent-orange);border-color:rgba(255,145,0,0.15)}
+.code-hint{font-family:var(--font-mono);font-size:0.62rem;color:var(--text-muted);padding:4px 10px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border)}
+
+/* Array View */
+.array-viewport{padding:24px 20px;overflow-x:auto;min-height:140px}
+.array-wrapper{display:flex;flex-direction:column;gap:6px;min-width:fit-content}
+.array-row{display:flex;align-items:flex-end;gap:3px}
+.cell{display:flex;flex-direction:column;align-items:center;gap:3px;transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1);min-width:52px}
+.cell-val{width:52px;height:46px;display:flex;align-items:center;justify-content:center;border-radius:8px;font-family:var(--font-mono);font-size:0.88rem;font-weight:700;transition:all 0.3s ease;border:1.5px solid var(--border)}
+.cell-val.occupied{color:var(--text-primary);background:rgba(68,138,255,0.06);border-color:rgba(68,138,255,0.2)}
+.cell-val.empty{color:var(--text-muted);background:rgba(255,255,255,0.015);border-color:var(--border);opacity:0.5}
+.cell-val.hl-add{border-color:var(--accent-green);background:var(--accent-green-bg);color:var(--accent-green);animation:popIn .4s ease}
+.cell-val.hl-remove{border-color:var(--accent-red);background:var(--accent-red-bg);color:var(--accent-red)}
+.cell-val.hl-shift{border-color:var(--accent-amber);background:var(--accent-amber-bg);color:var(--accent-amber);animation:shiftGlow .5s ease}
+.cell-val.hl-get{border-color:var(--accent-amber);background:var(--accent-amber-bg);color:var(--accent-amber);animation:peekPulse .8s ease infinite}
+.cell-val.hl-set{border-color:var(--accent-purple);background:var(--accent-purple-bg);color:var(--accent-purple);animation:popIn .4s ease}
+.cell-val.hl-gap{border:2px dashed rgba(255,82,82,0.4);background:rgba(255,82,82,0.04);color:transparent}
+@keyframes popIn{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes shiftGlow{0%{transform:translateX(-8px);opacity:0.5}100%{transform:translateX(0);opacity:1}}
+@keyframes peekPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08);box-shadow:0 0 16px rgba(255,193,7,0.3)}}
+.cell-idx{font-size:0.55rem;font-weight:600;color:var(--text-muted);font-family:var(--font-mono);opacity:0.7}
+.separator{width:2px;height:46px;background:linear-gradient(180deg,var(--accent-orange),transparent);border-radius:1px;align-self:flex-start;margin:0 2px;opacity:0.6}
+.sep-label{font-size:0.5rem;font-weight:700;color:var(--accent-orange);font-family:var(--font-mono);white-space:nowrap}
+.array-bracket{font-family:var(--font-mono);font-size:1.3rem;font-weight:300;color:rgba(255,255,255,0.15);align-self:center}
+
+/* Capacity Bar */
+.capacity-bar{display:flex;align-items:center;gap:12px;padding:10px 20px;border-top:1px solid var(--border-subtle)}
+.cap-track{flex:1;height:6px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;position:relative}
+.cap-fill{height:100%;border-radius:3px;transition:width 0.5s ease,background 0.3s}
+.cap-text{font-size:0.68rem;font-weight:600;color:var(--text-muted);font-family:var(--font-mono);white-space:nowrap}
+
+/* Info Bar */
+.info-bar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-secondary);min-height:48px;transition:all 0.3s ease;backdrop-filter:blur(20px)}
+.info-bar.action-add{border-color:rgba(76,255,145,0.2);background:rgba(76,255,145,0.03)}
+.info-bar.action-remove{border-color:rgba(255,82,82,0.2);background:rgba(255,82,82,0.03)}
+.info-bar.action-get{border-color:rgba(255,193,7,0.2);background:rgba(255,193,7,0.03)}
+.info-bar.action-set{border-color:rgba(179,136,255,0.2);background:rgba(179,136,255,0.03)}
+.info-bar.action-resize{border-color:rgba(255,145,0,0.25);background:rgba(255,145,0,0.04)}
+.info-text{font-weight:500;line-height:1.5}
+.info-text strong{color:var(--text-primary);font-weight:700}
+
+/* Log */
+.log-panel{max-height:220px}
+.log-container{padding:10px 16px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.log-container::-webkit-scrollbar{width:3px}
+.log-container::-webkit-scrollbar-track{background:transparent}
+.log-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.log-entry{font-family:var(--font-mono);font-size:0.68rem;padding:4px 10px;border-radius:var(--radius-sm);line-height:1.6;color:var(--text-secondary)}
+.log-entry.log-add{color:var(--accent-green);background:var(--accent-green-bg)}
+.log-entry.log-remove{color:var(--accent-red);background:var(--accent-red-bg)}
+.log-entry.log-get{color:var(--accent-amber);background:var(--accent-amber-bg)}
+.log-entry.log-set{color:var(--accent-purple);background:var(--accent-purple-bg)}
+.log-entry.log-resize{color:var(--accent-orange);background:var(--accent-orange-bg)}
+.log-entry.log-info{color:var(--text-muted)}
+
+@media(max-width:900px){.header{flex-direction:column;align-items:flex-start}.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
+@media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.stepper-btn{width:32px;height:36px}.cell-val{width:42px;height:38px;font-size:0.78rem}}
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <div class="header-left">
+            <div class="logo-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/>
+                </svg>
+            </div>
+            <div>
+                <h1>ArrayList Visualizer</h1>
+                <p class="subtitle">Java Collections Framework — Dynamic Array (Resizable)</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="formula-badge"><span class="formula-label">Default</span><code>capacity = 10</code></div>
+            <div class="formula-badge"><span class="formula-label">Growth</span><code>old + (old >> 1)</code></div>
+            <div class="formula-badge"><span class="formula-label">Add/Remove</span><code>System.arraycopy</code></div>
+        </div>
+    </header>
+
+    <div class="controls-bar">
+        <div class="controls-left">
+            <div class="input-group">
+                <button class="stepper-btn" id="decBtn" type="button">−</button>
+                <input type="number" id="valueInput" placeholder="val" min="-999" max="999">
+                <button class="stepper-btn" id="incBtn" type="button" style="border-radius:0">+</button>
+                <button id="addBtn" class="btn btn-add">add(e)</button>
+            </div>
+            <div class="input-group" style="margin-left:4px">
+                <input type="number" id="idxInput" class="idx-input" placeholder="idx" min="0" max="999">
+                <button id="addAtBtn" class="btn btn-addAt" style="border-radius:0 var(--radius-sm) var(--radius-sm) 0">add(i,e)</button>
+            </div>
+            <button id="removeBtn" class="btn btn-remove">remove(i)</button>
+            <button id="getBtn" class="btn btn-get">get(i)</button>
+            <button id="setBtn" class="btn btn-set">set(i,e)</button>
+            <button id="clearAllBtn" class="btn btn-clear">Clear</button>
+        </div>
+        <div class="controls-right">
+            <button id="sampleBtn" class="btn btn-sample">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Load Example
+            </button>
+            <div class="speed-control">
+                <label>Speed</label>
+                <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+            </div>
+        </div>
+    </div>
+
+    <!-- Array View -->
+    <div class="panel" id="arrayPanel">
+        <div class="panel-header">
+            <h2>📦 Internal Array — Object[] elementData</h2>
+            <div style="display:flex;gap:8px;align-items:center">
+                <span class="badge" id="sizeLabel">Size: 0</span>
+                <span class="badge badge-orange" id="capLabel">Capacity: 10</span>
+            </div>
+        </div>
+        <div class="array-viewport" id="arrayViewport">
+            <div class="array-wrapper" id="arrayContainer">
+                <div style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem;text-align:center;padding:18px;width:100%">
+                    Empty — Object[] elementData = new Object[10]
+                </div>
+            </div>
+        </div>
+        <div class="capacity-bar">
+            <span class="cap-text" id="capText">0 / 10</span>
+            <div class="cap-track"><div class="cap-fill" id="capFill" style="width:0%;background:var(--accent-blue)"></div></div>
+        </div>
+    </div>
+
+    <div class="info-bar" id="infoBar">
+        <div>ℹ️</div>
+        <div class="info-text" id="infoText">Ready. Add elements or load the example to begin.</div>
+    </div>
+
+    <div class="panel log-panel">
+        <div class="panel-header">
+            <h2>📋 Operation Log</h2>
+            <button id="clearLogBtn" class="btn btn-clear-log">Clear</button>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">Visualizer ready. Default capacity = 10.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * ArrayList — mirrors Java's ArrayList internals.
+ */
+class SimArrayList {
+    constructor(initCap = 10) {
+        this.capacity = initCap;
+        this.data = new Array(this.capacity).fill(undefined);
+        this._size = 0;
+    }
+    get size() { return this._size; }
+    get isEmpty() { return this._size === 0; }
+
+    _grow() {
+        const oldCap = this.capacity;
+        const newCap = oldCap + (oldCap >> 1); // 1.5x
+        const newArr = new Array(newCap).fill(undefined);
+        for (let i = 0; i < this._size; i++) newArr[i] = this.data[i];
+        this.data = newArr;
+        this.capacity = newCap;
+        return { oldCap, newCap };
+    }
+
+    add(val) {
+        const ops = [];
+        if (this._size === this.capacity) {
+            const r = this._grow();
+            ops.push({ type: 'resize', oldCap: r.oldCap, newCap: r.newCap, snapshot: this.data.slice(0, this.capacity), size: this._size, message: `Capacity full! Grew: ${r.oldCap} → ${r.newCap} (oldCap + oldCap >> 1)` });
+        }
+        this.data[this._size] = val;
+        this._size++;
+        ops.push({ type: 'add', index: this._size - 1, value: val, snapshot: this.data.slice(0, this.capacity), size: this._size, message: `add(${val}): placed at index ${this._size - 1}. Size = ${this._size}` });
+        return ops;
+    }
+
+    addAt(index, val) {
+        if (index < 0 || index > this._size) return null;
+        const ops = [];
+        if (this._size === this.capacity) {
+            const r = this._grow();
+            ops.push({ type: 'resize', oldCap: r.oldCap, newCap: r.newCap, snapshot: this.data.slice(0, this.capacity), size: this._size, message: `Capacity full! Grew: ${r.oldCap} → ${r.newCap}` });
+        }
+        // Shift right
+        const shiftCount = this._size - index;
+        if (shiftCount > 0) {
+            ops.push({ type: 'shift-right-start', index, count: shiftCount, snapshot: this.data.slice(0, this.capacity), size: this._size, message: `Shifting ${shiftCount} element(s) right from index ${index} to make room` });
+            for (let i = this._size; i > index; i--) this.data[i] = this.data[i - 1];
+            ops.push({ type: 'shift-right-done', index, shiftedIndices: Array.from({length: shiftCount}, (_, k) => index + 1 + k), snapshot: this.data.slice(0, this.capacity), size: this._size, message: `Shifted! Gap created at index ${index}` });
+        }
+        this.data[index] = val;
+        this._size++;
+        ops.push({ type: 'add', index, value: val, snapshot: this.data.slice(0, this.capacity), size: this._size, message: `add(${index}, ${val}): inserted. Size = ${this._size}` });
+        return ops;
+    }
+
+    remove(index) {
+        if (index < 0 || index >= this._size) return null;
+        const ops = [];
+        const val = this.data[index];
+        ops.push({ type: 'remove-mark', index, value: val, snapshot: this.data.slice(0, this.capacity), size: this._size, message: `remove(${index}): removing ${val} at index ${index}` });
+        const shiftCount = this._size - 1 - index;
+        if (shiftCount > 0) {
+            for (let i = index; i < this._size - 1; i++) this.data[i] = this.data[i + 1];
+            ops.push({ type: 'shift-left-done', index, shiftedIndices: Array.from({length: shiftCount}, (_, k) => index + k), snapshot: this.data.slice(0, this.capacity), size: this._size, message: `Shifted ${shiftCount} element(s) left (System.arraycopy)` });
+        }
+        this._size--;
+        this.data[this._size] = undefined;
+        ops.push({ type: 'remove-done', index, value: val, snapshot: this.data.slice(0, this.capacity), size: this._size, message: `Removed ${val}. Size = ${this._size}` });
+        return { value: val, ops };
+    }
+
+    get(index) { return (index >= 0 && index < this._size) ? this.data[index] : null; }
+    set(index, val) {
+        if (index < 0 || index >= this._size) return null;
+        const old = this.data[index];
+        this.data[index] = val;
+        return old;
+    }
+    clear() { this.data = new Array(this.capacity).fill(undefined); this._size = 0; }
+    toArray() { return this.data.slice(0, this._size); }
+}
+
+(function() {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const decBtn=$('decBtn'),incBtn=$('incBtn'),valueInput=$('valueInput'),idxInput=$('idxInput');
+    const addBtn=$('addBtn'),addAtBtn=$('addAtBtn'),removeBtn=$('removeBtn'),getBtn=$('getBtn'),setBtn=$('setBtn');
+    const clearAllBtn=$('clearAllBtn'),sampleBtn=$('sampleBtn'),clearLogBtn=$('clearLogBtn');
+    const speedSlider=$('speedSlider'),arrayContainer=$('arrayContainer');
+    const infoBar=$('infoBar'),infoText=$('infoText'),logContainer=$('logContainer');
+    const sizeLabel=$('sizeLabel'),capLabel=$('capLabel'),capText=$('capText'),capFill=$('capFill');
+    const allBtns=[addBtn,addAtBtn,removeBtn,getBtn,setBtn,clearAllBtn,sampleBtn];
+
+    let list = new SimArrayList(10);
+    let animating = false;
+
+    function getDelay(){const s=[1200,800,550,350,200];return s[parseInt(speedSlider.value)-1]||550}
+    function setAnimating(v){animating=v;allBtns.forEach(b=>b.disabled=v);updateBtns()}
+    function updateBtns(){removeBtn.disabled=animating||list.isEmpty;getBtn.disabled=animating||list.isEmpty;setBtn.disabled=animating||list.isEmpty}
+
+    function log(msg,type='info'){const e=document.createElement('div');e.className=`log-entry log-${type}`;const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});e.textContent=`[${t}] ${msg}`;logContainer.appendChild(e);logContainer.scrollTop=logContainer.scrollHeight}
+    function setInfo(msg,cls=''){infoText.innerHTML=msg;infoBar.className='info-bar'+(cls?` action-${cls}`:'')}
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+    function renderArray(hl={}){
+        const cap=list.capacity,sz=list.size,d=list.data;
+        sizeLabel.textContent=`Size: ${sz}`;
+        capLabel.textContent=`Capacity: ${cap}`;
+        capText.textContent=`${sz} / ${cap}`;
+        const pct=cap>0?(sz/cap)*100:0;
+        capFill.style.width=pct+'%';
+        capFill.style.background=pct>80?'var(--accent-red)':pct>50?'var(--accent-amber)':'var(--accent-blue)';
+
+        if(sz===0&&!hl.addIndex&&hl.addIndex!==0){
+            arrayContainer.innerHTML=`<div style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem;text-align:center;padding:18px;width:100%">Empty — Object[] elementData = new Object[${cap}]</div>`;
+            return;
+        }
+        let html='<div class="array-row"><span class="array-bracket">[</span>';
+        for(let i=0;i<cap;i++){
+            const val=d[i];
+            const occ=i<sz;
+            let cls=occ?'occupied':'empty';
+            if(hl.addIndex===i)cls='hl-add';
+            if(hl.removeIndex===i)cls='hl-remove';
+            if(hl.getIndex===i)cls='hl-get';
+            if(hl.setIndex===i)cls='hl-set';
+            if(hl.shiftIndices&&hl.shiftIndices.includes(i))cls='hl-shift';
+            if(hl.gapIndex===i)cls='hl-gap';
+            // Size/capacity separator
+            if(i===sz&&sz<cap){
+                html+=`<div style="display:flex;flex-direction:column;align-items:center;gap:2px;margin:0 2px"><div class="separator"></div><span class="sep-label">size=${sz}</span></div>`;
+            }
+            html+=`<div class="cell"><div class="cell-val ${cls}">${occ?(val!==undefined?val:''):''}</div><span class="cell-idx">${i}</span></div>`;
+        }
+        html+='<span class="array-bracket">]</span></div>';
+        arrayContainer.innerHTML=html;
+    }
+
+    async function animateOps(ops,logType){
+        const d=getDelay();
+        for(const op of ops){
+            if(op.type==='resize'){
+                renderArray();setInfo(`⚡ <strong>Resize!</strong> ${op.message}`,'resize');log(op.message,'resize');await sleep(d*1.5);
+            }else if(op.type==='add'){
+                renderArray({addIndex:op.index});setInfo(`<strong>add(${op.value})</strong> at index <strong>${op.index}</strong>. Size = ${op.size}`,'add');log(op.message,'add');await sleep(d);
+            }else if(op.type==='shift-right-start'){
+                renderArray({gapIndex:op.index});setInfo(`⏩ Shifting ${op.count} element(s) right from index ${op.index}...`,'add');log(op.message,'info');await sleep(d*.8);
+            }else if(op.type==='shift-right-done'){
+                renderArray({shiftIndices:op.shiftedIndices,gapIndex:op.index});setInfo(`✅ Shifted! Gap at index <strong>${op.index}</strong>`,'add');log(op.message,'add');await sleep(d*.6);
+            }else if(op.type==='remove-mark'){
+                renderArray({removeIndex:op.index});setInfo(`🗑️ Removing <strong>${op.value}</strong> at index ${op.index}...`,'remove');log(op.message,'remove');await sleep(d);
+            }else if(op.type==='shift-left-done'){
+                renderArray({shiftIndices:op.shiftedIndices});setInfo(`⏪ Shifted ${op.shiftedIndices.length} element(s) left (System.arraycopy)`,'remove');log(op.message,'remove');await sleep(d*.8);
+            }else if(op.type==='remove-done'){
+                renderArray();log(op.message,'remove');await sleep(d*.4);
+            }
+        }
+    }
+
+    function getVal(){const v=parseInt(valueInput.value);if(isNaN(v)){setInfo('⚠️ Enter a valid integer value.','');return null}valueInput.value='';valueInput.focus();return v}
+    function getIdx(){const v=parseInt(idxInput.value);if(isNaN(v)||v<0){setInfo('⚠️ Enter a valid index ≥ 0.','');return null}return v}
+
+    async function handleAdd(){const v=getVal();if(v===null)return;setAnimating(true);const ops=list.add(v);await animateOps(ops,'add');setInfo(`✅ <strong>${v}</strong> added. Size: <strong>${list.size}</strong>`,'add');renderArray();setAnimating(false)}
+
+    async function handleAddAt(){const v=getVal();const i=getIdx();if(v===null||i===null)return;if(i>list.size){setInfo(`⚠️ Index ${i} out of bounds. Size = ${list.size}`,'');return}setAnimating(true);const ops=list.addAt(i,v);if(!ops){setInfo('⚠️ Invalid index.','');setAnimating(false);return}await animateOps(ops,'add');setInfo(`✅ <strong>${v}</strong> inserted at index <strong>${i}</strong>. Size: <strong>${list.size}</strong>`,'add');renderArray();setAnimating(false)}
+
+    async function handleRemove(){const i=getIdx();if(i===null)return;if(i>=list.size){setInfo(`⚠️ Index ${i} out of bounds. Size = ${list.size}`,'');return}setAnimating(true);const r=list.remove(i);await animateOps(r.ops,'remove');setInfo(`🗑️ <strong>remove(${i})</strong> → <strong>${r.value}</strong>. Size: <strong>${list.size}</strong>`,'remove');renderArray();setAnimating(false)}
+
+    function handleGet(){const i=getIdx();if(i===null)return;if(i>=list.size){setInfo(`⚠️ Index ${i} out of bounds. Size = ${list.size}`,'');return}const v=list.get(i);log(`get(${i}) → ${v}`,'get');setInfo(`🔍 <strong>get(${i})</strong> → <strong>${v}</strong>. O(1) random access.`,'get');renderArray({getIndex:i})}
+
+    function handleSet(){const v=getVal();const i=getIdx();if(v===null||i===null)return;if(i>=list.size){setInfo(`⚠️ Index ${i} out of bounds. Size = ${list.size}`,'');return}const old=list.set(i,v);log(`set(${i}, ${v}): ${old} → ${v}`,'set');setInfo(`✏️ <strong>set(${i}, ${v})</strong>: replaced <strong>${old}</strong> with <strong>${v}</strong>. O(1).`,'set');renderArray({setIndex:i})}
+
+    function handleClear(){list.clear();log('clear() — All elements removed','info');setInfo('🧹 List cleared.','');renderArray()}
+
+    async function handleSample(){list=new SimArrayList(10);renderArray();setAnimating(true);const vals=[10,20,30,40,50,60,70];log(`Loading example: [${vals.join(', ')}]`,'info');for(const v of vals){const ops=list.add(v);await animateOps(ops,'add');renderArray();await sleep(120)}setInfo(`✅ Example loaded: [${list.toArray().join(', ')}]. Try <strong>add(3, 99)</strong> or <strong>remove(2)</strong>!`,'add');renderArray();setAnimating(false)}
+
+    decBtn.addEventListener('click',()=>{const v=parseInt(valueInput.value)||0;valueInput.value=v-1});
+    incBtn.addEventListener('click',()=>{const v=parseInt(valueInput.value)||0;valueInput.value=v+1});
+    valueInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&!animating)handleAdd()});
+    addBtn.addEventListener('click',handleAdd);
+    addAtBtn.addEventListener('click',handleAddAt);
+    removeBtn.addEventListener('click',handleRemove);
+    getBtn.addEventListener('click',handleGet);
+    setBtn.addEventListener('click',handleSet);
+    clearAllBtn.addEventListener('click',handleClear);
+    sampleBtn.addEventListener('click',handleSample);
+    clearLogBtn.addEventListener('click',()=>{logContainer.innerHTML='';log('Log cleared.','info')});
+
+    let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>renderArray(),150)});
+    renderArray();
+})();
+</script>
+</body>
+</html>
