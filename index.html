@@ -848,6 +848,14 @@
         --card-accent: rgba(100, 255, 218, 0.5);
         --card-glow: rgba(100, 255, 218, 0.04);
       }
+      .card-hashset {
+        --card-accent: rgba(255, 145, 0, 0.5);
+        --card-glow: rgba(255, 145, 0, 0.04);
+      }
+      .card-linkedhashset {
+        --card-accent: rgba(233, 30, 99, 0.5);
+        --card-glow: rgba(233, 30, 99, 0.04);
+      }
 
       .card-icon {
         width: 56px;
@@ -901,6 +909,24 @@
         );
         color: #000;
         box-shadow: 0 0 24px rgba(100, 255, 218, 0.3);
+      }
+      .card-icon-hashset {
+        background: linear-gradient(
+          135deg,
+          var(--accent-orange),
+          #ff6d00
+        );
+        color: #000;
+        box-shadow: 0 0 24px rgba(255, 145, 0, 0.3);
+      }
+      .card-icon-linkedhashset {
+        background: linear-gradient(
+          135deg,
+          #e91e63,
+          var(--accent-purple)
+        );
+        color: #fff;
+        box-shadow: 0 0 24px rgba(233, 30, 99, 0.3);
       }
 
       .card-title {
@@ -976,6 +1002,12 @@
       }
       .card-linkedlist .card-cta {
         color: var(--accent-teal);
+      }
+      .card-hashset .card-cta {
+        color: var(--accent-orange);
+      }
+      .card-linkedhashset .card-cta {
+        color: #f48fb1;
       }
 
       /* ===== Stats Bar ===== */
@@ -1318,7 +1350,7 @@
     <div class="section" style="padding-top: 0; padding-bottom: 0">
       <div class="stats-bar reveal">
         <div class="stat-item">
-          <div class="stat-value">5</div>
+          <div class="stat-value">7</div>
           <div class="stat-label">Visualizers</div>
         </div>
         <div class="stat-item">
@@ -1622,6 +1654,124 @@
             <span class="card-tag">floor()</span>
             <span class="card-tag">ceiling()</span>
             <span class="card-tag">O(log n)</span>
+          </div>
+          <div class="card-cta">
+            Open Visualizer
+            <svg
+              class="arrow"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </a>
+
+        <!-- 6. HashSet Card -->
+        <a
+          href="HashSet/index.html"
+          target="_blank"
+          class="collection-card card-hashset"
+          id="card-hashset"
+        >
+          <div class="card-icon card-icon-hashset">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">HashSet</div>
+            <div class="card-subtitle">Hash Table with Separate Chaining</div>
+          </div>
+          <p class="card-desc">
+            See the bucket array, hash computation
+            (<code>hash & (n-1)</code>), and collision chaining in real time.
+            Watch the load factor climb and trigger automatic rehashing.
+          </p>
+          <div class="card-tags">
+            <span class="card-tag">add(e)</span>
+            <span class="card-tag">remove(e)</span>
+            <span class="card-tag">contains(e)</span>
+            <span class="card-tag">rehash</span>
+            <span class="card-tag">load factor 0.75</span>
+          </div>
+          <div class="card-cta">
+            Open Visualizer
+            <svg
+              class="arrow"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </a>
+
+        <!-- 7. LinkedHashSet Card -->
+        <a
+          href="LinkedHashSet/index.html"
+          target="_blank"
+          class="collection-card card-linkedhashset"
+          id="card-linkedhashset"
+        >
+          <div class="card-icon card-icon-linkedhashset">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+              <line x1="10" y1="6.5" x2="14" y2="6.5" />
+              <line x1="10" y1="17.5" x2="14" y2="17.5" />
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">LinkedHashSet</div>
+            <div class="card-subtitle">
+              Hash Table + Insertion-Order Linked List
+            </div>
+          </div>
+          <p class="card-desc">
+            Same bucket array as HashSet, but with a doubly-linked list
+            threading through all entries in insertion order. See
+            <code>iterate()</code> walk the chain to prove order is preserved.
+          </p>
+          <div class="card-tags">
+            <span class="card-tag">add(e)</span>
+            <span class="card-tag">remove(e)</span>
+            <span class="card-tag">contains(e)</span>
+            <span class="card-tag">iterate()</span>
+            <span class="card-tag">insertion order</span>
           </div>
           <div class="card-cta">
             Open Visualizer
