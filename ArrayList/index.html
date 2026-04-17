@@ -38,7 +38,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .header-left{display:flex;align-items:center;gap:16px}
 .logo-icon{width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--accent-orange),var(--accent-amber));display:flex;align-items:center;justify-content:center;color:#000;box-shadow:0 0 24px rgba(255,145,0,0.3);transition:transform var(--transition)}
 .logo-icon:hover{transform:scale(1.08) rotate(-3deg)}
-.header h1{font-size:1.35rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.header h1{font-size:1.35rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .subtitle{font-size:0.72rem;color:var(--text-muted);font-weight:500;margin-top:3px;letter-spacing:0.02em}
 .header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .formula-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-full);font-size:0.72rem;transition:border-color var(--transition),background var(--transition)}
@@ -146,6 +146,36 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .log-entry.log-resize{color:var(--accent-orange);background:var(--accent-orange-bg)}
 .log-entry.log-info{color:var(--text-muted)}
 
+/* ===== Theory Section ===== */
+.theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
+.theory-toggle:hover{background:rgba(255,255,255,0.02)}
+.theory-toggle h2{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-secondary)}
+.theory-toggle h2 .accent{color:var(--accent-orange)}
+.toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
+.theory-section.open .toggle-chevron{transform:rotate(180deg)}
+.theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.theory-section.open .theory-body{max-height:3500px}
+.theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
+.theory-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.theory-card:hover{border-color:var(--border-glow)}
+.theory-card h3{font-size:0.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.theory-card h3 .icon{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.theory-card p,.theory-card li{font-size:0.76rem;color:var(--text-secondary);line-height:1.7}
+.theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+.theory-full{grid-column:1/-1}
+.complexity-table{width:100%;border-collapse:collapse;margin-top:8px}
+.complexity-table th,.complexity-table td{padding:8px 12px;font-size:0.72rem;text-align:left;border-bottom:1px solid var(--border-subtle)}
+.complexity-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.62rem;letter-spacing:0.08em}
+.complexity-table td{font-family:var(--font-mono);color:var(--text-primary);font-weight:600}
+.complexity-table td:first-child{font-family:var(--font);color:var(--text-secondary)}
+.complexity-table .good{color:var(--accent-green)}
+.complexity-table .warn{color:var(--accent-amber)}
+.complexity-table .bad{color:var(--accent-red)}
+
 @media(max-width:900px){.header{flex-direction:column;align-items:flex-start}.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
 @media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.stepper-btn{width:32px;height:36px}.cell-val{width:42px;height:38px;font-size:0.78rem}}
 .home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:0.72rem;font-weight:600;text-decoration:none;transition:all var(--transition)}
@@ -202,6 +232,94 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
             <div class="speed-control">
                 <label>Speed</label>
                 <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+            </div>
+        </div>
+    </div>
+
+    <!-- Theory Section -->
+    <div class="theory-section" id="theorySection">
+        <button class="theory-toggle" id="theoryToggle" type="button">
+            <h2>📖 <span class="accent" style="color:var(--accent-orange)">What is an ArrayList?</span> — Dynamic Array Internals</h2>
+            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="theory-body">
+            <div class="theory-inner">
+                <div class="theory-grid">
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-blue-bg);color:var(--accent-blue)">📦</span> Dynamic Array Backend</h3>
+                        <p style="margin-bottom:10px">An ArrayList stores elements inside a contiguous array. When it runs out of space, it automatically grows:</p>
+                        <ul>
+                            <li><strong>Contiguous Memory</strong> ensures fast sequential iteration and CPU cache locality.</li>
+                            <li><strong>Initial Capacity:</strong> Starts at 10 (by default).</li>
+                            <li><strong>Growth Factor:</strong> Grows by 1.5x (<code>newCap = old + (old >> 1)</code>).</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-green-bg);color:var(--accent-green)">⚡</span> The O(1) Advantage</h3>
+                        <p style="margin-bottom:10px">ArrayList is heavily optimized for reads and append-only writes:</p>
+                        <ul>
+                            <li><strong>Random Access:</strong> <code>get(i)</code> and <code>set(i, val)</code> are instantly calculated via memory offsets, making them <strong>O(1)</strong>.</li>
+                            <li><strong>Appending:</strong> <code>add(val)</code> at the end is <strong>amortized O(1)</strong> (fast except during a resize).</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-red-bg);color:var(--accent-red)">📉</span> The O(N) Caveat</h3>
+                        <p style="margin-bottom:10px">Because the array is contiguous, inserting or removing elements in the middle forces shifting:</p>
+                        <ul>
+                            <li><strong>Shifting Cost:</strong> <code>add(i, val)</code> and <code>remove(i)</code> take <strong>O(N)</strong> time because <code>System.arraycopy</code> must move elements.</li>
+                            <li>Removing from the head (index 0) is always the worst case, <strong>O(N)</strong>.</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card theory-full">
+                        <h3><span class="icon" style="background:rgba(255,255,255,0.05);color:var(--text-primary)">⚙️</span> Common Methods & Time Complexity</h3>
+                        <table class="complexity-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                    <th>Origin</th>
+                                    <th>Time Comp.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>boolean add(E e)</code></td>
+                                    <td>Appends the element to the end of the list.</td>
+                                    <td>List</td>
+                                    <td><span class="good">O(1)</span>*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>void add(int i, E e)</code></td>
+                                    <td>Inserts element at position <code>i</code>, shifting subsequent elements right.</td>
+                                    <td>List</td>
+                                    <td><span class="bad">O(n)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>E remove(int i)</code></td>
+                                    <td>Removes element at position <code>i</code>, shifting subsequent elements left.</td>
+                                    <td>List</td>
+                                    <td><span class="bad">O(n)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>E get(int i)</code></td>
+                                    <td>Returns the element at the specified position.</td>
+                                    <td>List</td>
+                                    <td><span class="good">O(1)</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>E set(int i, E e)</code></td>
+                                    <td>Replaces the element at the specified position.</td>
+                                    <td>List</td>
+                                    <td><span class="good">O(1)</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top:10px;font-size:0.65rem;color:var(--text-muted)">* Amortized complexity. It takes O(n) during the exact moment a resize happens, but effectively O(1) averaged over all insertions.</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -433,6 +551,11 @@ class SimArrayList {
     clearLogBtn.addEventListener('click',()=>{logContainer.innerHTML='';log('Log cleared.','info')});
 
     let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(()=>renderArray(),150)});
+    
+    /* Theory section toggle */
+    const theorySection = $('theorySection'), theoryToggle = $('theoryToggle');
+    theoryToggle.addEventListener('click', () => theorySection.classList.toggle('open'));
+
     renderArray();
 })();
 </script>

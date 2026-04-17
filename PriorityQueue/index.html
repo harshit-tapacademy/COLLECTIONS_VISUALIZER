@@ -100,7 +100,7 @@ body {
     transition: transform var(--transition), box-shadow var(--transition);
 }
 .logo-icon:hover { transform: scale(1.08) rotate(-3deg); box-shadow: 0 0 32px rgba(68, 138, 255, 0.4); }
-.header h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, #888888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.header h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #ffffff 0%, #888888 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .subtitle { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; margin-top: 3px; letter-spacing: 0.02em; }
 .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .formula-badge {
@@ -228,6 +228,36 @@ body {
 .speed-control input[type="range"] { width: 64px; height: 4px; -webkit-appearance: none; appearance: none; background: rgba(255,255,255,0.08); border-radius: 2px; outline: none; }
 .speed-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--accent-blue); cursor: pointer; box-shadow: 0 0 8px rgba(68, 138, 255, 0.4); transition: box-shadow var(--transition); }
 .speed-control input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 14px rgba(68, 138, 255, 0.6); }
+
+/* ===== Theory Section ===== */
+.theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
+.theory-toggle:hover{background:rgba(255,255,255,0.02)}
+.theory-toggle h2{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-secondary)}
+.theory-toggle h2 .accent{color:var(--accent-orange)}
+.toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
+.theory-section.open .toggle-chevron{transform:rotate(180deg)}
+.theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.theory-section.open .theory-body{max-height:3500px}
+.theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
+.theory-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.theory-card:hover{border-color:var(--border-glow)}
+.theory-card h3{font-size:0.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.theory-card h3 .icon{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.theory-card p,.theory-card li{font-size:0.76rem;color:var(--text-secondary);line-height:1.7}
+.theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+.theory-full{grid-column:1/-1}
+.complexity-table{width:100%;border-collapse:collapse;margin-top:8px}
+.complexity-table th,.complexity-table td{padding:8px 12px;font-size:0.72rem;text-align:left;border-bottom:1px solid var(--border-subtle)}
+.complexity-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.62rem;letter-spacing:0.08em}
+.complexity-table td{font-family:var(--font-mono);color:var(--text-primary);font-weight:600}
+.complexity-table td:first-child{font-family:var(--font);color:var(--text-secondary)}
+.complexity-table .good{color:var(--accent-green)}
+.complexity-table .warn{color:var(--accent-amber)}
+.complexity-table .bad{color:var(--accent-red)}
 
 /* ===== Panels ===== */
 .panel {
@@ -454,6 +484,88 @@ body {
                 <div class="speed-control">
                     <label>Speed</label>
                     <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Theory Section -->
+        <div class="theory-section" id="theorySection">
+            <button class="theory-toggle" id="theoryToggle" type="button">
+                <h2>📖 <span class="accent" style="color:var(--accent-orange)">What is a PriorityQueue?</span> — Binary Min-Heap Internals</h2>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="theory-body">
+                <div class="theory-inner">
+                    <div class="theory-grid">
+                        <div class="theory-card">
+                            <h3><span class="icon" style="background:var(--accent-amber-bg);color:var(--accent-amber)">🌳</span> The Array-Backed Tree</h3>
+                            <p style="margin-bottom:10px">A PriorityQueue looks like a tree, but it is actually stored in a flat array! Math is used to find relatives:</p>
+                            <ul>
+                                <li><strong>Left Child:</strong> Always at index <code>2i + 1</code>.</li>
+                                <li><strong>Right Child:</strong> Always at index <code>2i + 2</code>.</li>
+                                <li><strong>Parent:</strong> Always at index <code>(i - 1) / 2</code>.</li>
+                            </ul>
+                        </div>
+
+                        <div class="theory-card">
+                            <h3><span class="icon" style="background:var(--accent-green-bg);color:var(--accent-green)">⚖️</span> The Heap Property</h3>
+                            <p style="margin-bottom:10px">It is not a sorted list. Instead, it maintains the "Heap Property":</p>
+                            <ul>
+                                <li><strong>Min-Heap:</strong> Every parent is <em>smaller</em> than its children. The smallest element is always exactly at the root (index 0).</li>
+                                <li><strong>Max-Heap:</strong> The opposite. Every parent is larger than its children, meaning the largest element is at the root.</li>
+                            </ul>
+                        </div>
+
+                        <div class="theory-card">
+                            <h3><span class="icon" style="background:var(--accent-red-bg);color:var(--accent-red)">🔄</span> Heapification (Up & Down)</h3>
+                            <p style="margin-bottom:10px">To maintain the structure when adding or removing elements, the heap restructures itself:</p>
+                            <ul>
+                                <li><strong>Sift Up (add):</strong> New elements are added to the very end of the array, then bubble <em>up</em> if they are smaller than their parent.</li>
+                                <li><strong>Sift Down (poll):</strong> We remove the root, move the last element to the root, and bubble it <em>down</em>, swapping with its smallest child.</li>
+                            </ul>
+                        </div>
+
+                        <div class="theory-card theory-full">
+                            <h3><span class="icon" style="background:rgba(255,255,255,0.05);color:var(--text-primary)">⚙️</span> Common Methods & Time Complexity</h3>
+                            <table class="complexity-table">
+                                <thead>
+                                    <tr>
+                                        <th>Method</th>
+                                        <th>Description</th>
+                                        <th>Process</th>
+                                        <th>Time Comp.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>boolean add(E e)</code></td>
+                                        <td>Inserts the element into the priority queue.</td>
+                                        <td>Insert at end, <strong>Sift Up</strong>.</td>
+                                        <td><span class="warn">O(log N)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>E poll()</code></td>
+                                        <td>Retrieves and removes the head of this queue.</td>
+                                        <td>Remove root, move tail to root, <strong>Sift Down</strong>.</td>
+                                        <td><span class="warn">O(log N)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>E peek()</code></td>
+                                        <td>Retrieves, but does not remove, the head of this queue.</td>
+                                        <td>Return array[0].</td>
+                                        <td><span class="good">O(1)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>boolean remove(Object o)</code></td>
+                                        <td>Removes a single instance of the specified element.</td>
+                                        <td>Find O(N), remove, Sift Up/Down.</td>
+                                        <td><span class="bad">O(N)</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p style="margin-top:10px;font-size:0.65rem;color:var(--text-muted)">* Note: Java's PriorityQueue is NOT thread-safe. Use <code>PriorityBlockingQueue</code> for concurrent access.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -748,6 +860,11 @@ class BinaryHeap {
 
     let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => fullRender(), 150); });
     minLabel.classList.add('active');
+
+    /* Theory section toggle */
+    const theorySection = $('theorySection'), theoryToggle = $('theoryToggle');
+    if (theoryToggle) theoryToggle.addEventListener('click', () => theorySection.classList.toggle('open'));
+
     fullRender();
 })();
     </script>

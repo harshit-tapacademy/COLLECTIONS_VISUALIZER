@@ -62,7 +62,7 @@ body { font-family: var(--font); background: var(--bg-primary); color: var(--tex
 .header-left { display: flex; align-items: center; gap: 16px; }
 .logo-icon { width: 48px; height: 48px; border-radius: var(--radius-md); background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue)); display: flex; align-items: center; justify-content: center; color: white; box-shadow: var(--shadow-glow-cyan); transition: transform var(--transition); }
 .logo-icon:hover { transform: scale(1.08) rotate(-3deg); }
-.header h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #fff 0%, #888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.header h1 { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.03em; background: linear-gradient(135deg, #fff 0%, #888 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .subtitle { font-size: 0.72rem; color: var(--text-muted); font-weight: 500; margin-top: 3px; letter-spacing: 0.02em; }
 .header-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .formula-badge { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: var(--radius-full); font-size: 0.72rem; transition: border-color var(--transition), background var(--transition); }
@@ -141,7 +141,6 @@ body { font-family: var(--font); background: var(--bg-primary); color: var(--tex
 .empty-state.hidden { display: none; }
 
 /* ===== Array View ===== */
-.array-panel { }
 .array-container { padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; overflow-x: auto; min-height: 90px; }
 .array-row { display: flex; align-items: flex-end; gap: 3px; }
 .array-cell { display: flex; flex-direction: column; align-items: center; gap: 2px; transition: all 0.3s ease; min-width: 44px; }
@@ -181,6 +180,36 @@ body { font-family: var(--font); background: var(--bg-primary); color: var(--tex
 .log-entry.log-peek { color: var(--accent-amber); background: var(--accent-amber-bg); }
 .log-entry.log-resize { color: var(--accent-purple); background: var(--accent-purple-bg); }
 .log-entry.log-info { color: var(--text-muted); }
+
+/* ===== Theory Section ===== */
+.theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
+.theory-toggle:hover{background:rgba(255,255,255,0.02)}
+.theory-toggle h2{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-secondary)}
+.theory-toggle h2 .accent{color:var(--accent-orange)}
+.toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
+.theory-section.open .toggle-chevron{transform:rotate(180deg)}
+.theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.theory-section.open .theory-body{max-height:3500px}
+.theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
+.theory-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.theory-card:hover{border-color:var(--border-glow)}
+.theory-card h3{font-size:0.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.theory-card h3 .icon{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.theory-card p,.theory-card li{font-size:0.76rem;color:var(--text-secondary);line-height:1.7}
+.theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+.theory-full{grid-column:1/-1}
+.complexity-table{width:100%;border-collapse:collapse;margin-top:8px}
+.complexity-table th,.complexity-table td{padding:8px 12px;font-size:0.72rem;text-align:left;border-bottom:1px solid var(--border-subtle)}
+.complexity-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.62rem;letter-spacing:0.08em}
+.complexity-table td{font-family:var(--font-mono);color:var(--text-primary);font-weight:600}
+.complexity-table td:first-child{font-family:var(--font);color:var(--text-secondary)}
+.complexity-table .good{color:var(--accent-green)}
+.complexity-table .warn{color:var(--accent-amber)}
+.complexity-table .bad{color:var(--accent-red)}
 
 /* ===== Responsive ===== */
 @media (max-width: 900px) {
@@ -264,6 +293,80 @@ body { font-family: var(--font); background: var(--bg-primary); color: var(--tex
                 <div class="speed-control">
                     <label>Speed</label>
                     <input type="range" id="speedSlider" min="1" max="5" value="3" step="1">
+                </div>
+            </div>
+        </div>
+
+        <!-- Theory Section -->
+        <div class="theory-section" id="theorySection">
+            <button class="theory-toggle" id="theoryToggle" type="button">
+                <h2>📖 <span class="accent" style="color:var(--accent-orange)">What is an ArrayDeque?</span> — Double-Ended Queue Internals</h2>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="theory-body">
+                <div class="theory-inner">
+                    <div class="theory-grid">
+                        <div class="theory-card">
+                            <h3><span class="icon" style="background:var(--accent-blue-bg);color:var(--accent-blue)">📦</span> Circular Array Backend</h3>
+                            <p style="margin-bottom:10px">An ArrayDeque uses a contiguous array but treats it as a circle using two pointers:</p>
+                            <ul>
+                                <li><strong>Head Pointer:</strong> Tracks the first element. Decrements when adding to the front.</li>
+                                <li><strong>Tail Pointer:</strong> Tracks the next available slot at the end. Increments when adding to the back.</li>
+                                <li><strong>Bitwise Wrapping:</strong> Power-of-2 capacity lets it wrap around instantly using <code>index & (length - 1)</code> instead of modulo.</li>
+                            </ul>
+                        </div>
+
+                        <div class="theory-card">
+                            <h3><span class="icon" style="background:var(--accent-green-bg);color:var(--accent-green)">⚡</span> Faster than LinkedList & Stack</h3>
+                            <p style="margin-bottom:10px">It is the undisputed king of Queues and Stacks in Java:</p>
+                            <ul>
+                                <li><strong>Cache Friendly:</strong> Contiguous memory means zero node allocation and great CPU cache locality.</li>
+                                <li><strong>No Shifting:</strong> Adding/removing from either end is <strong>O(1)</strong> because only pointers move.</li>
+                                <li>Better than <code>Stack</code> (not synchronized/legacy) and better than <code>LinkedList</code> (no node heap allocation).</li>
+                            </ul>
+                        </div>
+
+                        <div class="theory-card theory-full">
+                            <h3><span class="icon" style="background:rgba(255,255,255,0.05);color:var(--text-primary)">⚙️</span> Common Methods & Time Complexity</h3>
+                            <table class="complexity-table">
+                                <thead>
+                                    <tr>
+                                        <th>Method</th>
+                                        <th>Description</th>
+                                        <th>Origin</th>
+                                        <th>Time Comp.</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td><code>addFirst(E e)</code> / <code>push(E e)</code></td>
+                                        <td>Inserts at the head. Traverses backwards in the array.</td>
+                                        <td>Deque / Stack</td>
+                                        <td><span class="good">O(1)</span>*</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>addLast(E e)</code> / <code>add(E e)</code> / <code>offer(E e)</code></td>
+                                        <td>Inserts at the tail. Traverses forwards in the array.</td>
+                                        <td>Deque / Queue</td>
+                                        <td><span class="good">O(1)</span>*</td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>removeFirst()</code> / <code>pop()</code> / <code>poll()</code></td>
+                                        <td>Removes the head element. Advances head pointer.</td>
+                                        <td>Deque / Stack / Queue</td>
+                                        <td><span class="good">O(1)</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>removeLast()</code></td>
+                                        <td>Removes the tail element. Retreats tail pointer.</td>
+                                        <td>Deque</td>
+                                        <td><span class="good">O(1)</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p style="margin-top:10px;font-size:0.65rem;color:var(--text-muted)">* Amortized O(1). If the array fills up (head == tail), it creates a new double-sized array and copies elements linearly, taking O(n) temporarily.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -725,6 +828,10 @@ class CircularDeque {
 
     let resizeTimer;
     window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => fullRender(), 150); });
+
+    /* Theory section toggle */
+    const theorySection = $('theorySection'), theoryToggle = $('theoryToggle');
+    if (theoryToggle) theoryToggle.addEventListener('click', () => theorySection.classList.toggle('open'));
 
     /* ===== Init ===== */
     applyMode('deque');

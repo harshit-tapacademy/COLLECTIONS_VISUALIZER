@@ -288,6 +288,47 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
                             <li><strong>The linked list structure is preserved perfectly</strong>, so iteration order remains identical before and after a rehash!</li>
                         </ul>
                     </div>
+
+                    <div class="theory-card theory-full">
+                        <h3><span class="icon" style="background:rgba(255,255,255,0.05);color:var(--text-primary)">⚙️</span> Common Methods & Time Complexity</h3>
+                        <table class="complexity-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                    <th>Origin</th>
+                                    <th>Time Comp.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>boolean add(E e)</code></td>
+                                    <td>Adds the specified element if it is not already present, appending it to the insertion list.</td>
+                                    <td>Collection</td>
+                                    <td><span class="good">O(1)</span>*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>boolean remove(Object o)</code></td>
+                                    <td>Removes the element from the hash table and unlinks it from the list.</td>
+                                    <td>Collection</td>
+                                    <td><span class="good">O(1)</span>*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>boolean contains(Object o)</code></td>
+                                    <td>Returns true if this set contains the specified element.</td>
+                                    <td>Collection</td>
+                                    <td><span class="good">O(1)</span>*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>Iterator&lt;E&gt; iterator()</code></td>
+                                    <td>Returns an iterator over the elements in insertion order.</td>
+                                    <td>Iterable</td>
+                                    <td><span class="good">O(1)</span> (to get)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top:10px;font-size:0.65rem;color:var(--text-muted)">* Average case. LinkedHashSet operations have slightly higher constant factor over HashSet due to maintaining the doubly-linked list. Iterating is O(Size), not O(Capacity).</p>
+                    </div>
                 </div>
             </div>
         </div>

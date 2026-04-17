@@ -284,6 +284,47 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
                             <li>Not thread-safe (Use <code>ConcurrentHashMap.newKeySet()</code> for concurrent access)</li>
                         </ul>
                     </div>
+
+                    <div class="theory-card theory-full">
+                        <h3><span class="icon" style="background:rgba(255,255,255,0.05);color:var(--text-primary)">⚙️</span> Common Methods & Time Complexity</h3>
+                        <table class="complexity-table">
+                            <thead>
+                                <tr>
+                                    <th>Method</th>
+                                    <th>Description</th>
+                                    <th>Origin</th>
+                                    <th>Time Comp.</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>boolean add(E e)</code></td>
+                                    <td>Adds the specified element to this set if it is not already present.</td>
+                                    <td>Collection</td>
+                                    <td><span class="good">O(1)</span>*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>boolean remove(Object o)</code></td>
+                                    <td>Removes the specified element from this set if it is present.</td>
+                                    <td>Collection</td>
+                                    <td><span class="good">O(1)</span>*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>boolean contains(Object o)</code></td>
+                                    <td>Returns true if this set contains the specified element.</td>
+                                    <td>Collection</td>
+                                    <td><span class="good">O(1)</span>*</td>
+                                </tr>
+                                <tr>
+                                    <td><code>int size()</code></td>
+                                    <td>Returns the number of elements in this set (its cardinality).</td>
+                                    <td>Collection</td>
+                                    <td><span class="good">O(1)</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top:10px;font-size:0.65rem;color:var(--text-muted)">* Average case. Worst case is O(n) if all elements hash to the same bucket (or probe chain), though Java 8+ mitigates this using balanced trees for large chains.</p>
+                    </div>
                 </div>
             </div>
         </div>
