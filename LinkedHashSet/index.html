@@ -165,14 +165,42 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .log-entry.log-rehash{color:#f48fb1;background:rgba(233,30,99,0.08)}
 .log-entry.log-info{color:var(--text-muted)}
 
+/* ===== Theory Section ===== */
+.theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
+.theory-toggle:hover{background:rgba(255,255,255,0.02)}
+.theory-toggle h2{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-secondary)}
+.theory-toggle h2 .accent{color:#f48fb1}
+.toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
+.theory-section.open .toggle-chevron{transform:rotate(180deg)}
+.theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.theory-section.open .theory-body{max-height:3500px}
+.theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
+.theory-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.theory-card:hover{border-color:var(--border-glow)}
+.theory-card h3{font-size:0.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.theory-card h3 .icon{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.theory-card p,.theory-card li{font-size:0.76rem;color:var(--text-secondary);line-height:1.7}
+.theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+.theory-full{grid-column:1/-1}
+
 @media(max-width:900px){.header,.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
 @media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.bucket-col{min-width:56px}.bucket-slot{width:56px}.chain-node{font-size:0.7rem;padding:6px 2px}.order-node-box{padding:8px 10px;font-size:0.75rem}}
+.home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:0.72rem;font-weight:600;text-decoration:none;transition:all var(--transition)}
+.home-link:hover{background:rgba(255,255,255,0.08);color:var(--text-primary);border-color:var(--border-glow)}
     </style>
 </head>
 <body>
 <div class="app">
     <header class="header">
         <div class="header-left">
+            <a href="../index.html" class="home-link" aria-label="Back to Home" title="Back to Home">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                Home
+            </a>
             <div class="logo-icon">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -211,6 +239,57 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
                 Load Example
             </button>
             <div class="speed-control"><label>Speed</label><input type="range" id="speedSlider" min="1" max="5" value="3" step="1"></div>
+        </div>
+    </div>
+
+    <!-- Theory Section -->
+    <div class="theory-section" id="theorySection">
+        <button class="theory-toggle" id="theoryToggle" type="button">
+            <h2>📖 <span class="accent">What is a LinkedHashSet?</span> — Order-Preserving Hash Table</h2>
+            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="theory-body">
+            <div class="theory-inner">
+                <div class="theory-grid">
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:rgba(233,30,99,0.1);color:#e91e63">🔗</span> HashSet + Doubly-Linked List</h3>
+                        <p style="margin-bottom:10px">A <strong>LinkedHashSet</strong> provides all the benefits of a HashSet, but with predictability:</p>
+                        <ul>
+                            <li>Internally uses a <strong>Hash Table</strong> for <code>O(1)</code> average lookups and mutations.</li>
+                            <li><strong>Crucial Addition:</strong> Every entry is also a node in a <strong>Doubly-Linked List</strong>.</li>
+                            <li>This linked list naturally acts as a timeline, recording the exact sequence in which items were inserted.</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-green-bg);color:var(--accent-green)">⏱️</span> Insertion Order vs Access Order</h3>
+                        <ul>
+                            <li><strong>Insertion Order (Default):</strong> Iterating returns elements in the exact order they were <em>first</em> added. Re-inserting an existing element does NOT change its position.</li>
+                            <li>Backed internally by a <code>LinkedHashMap</code>.</li>
+                            <li>Perfect for cases where you want to remove duplicates from a list but <strong style="color:var(--text-primary)">must not scramble the order</strong>!</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-purple-bg);color:var(--accent-purple)">⚡</span> Performance & Memory Overhead</h3>
+                        <p style="margin-bottom:10px">The predictability comes at a small cost:</p>
+                        <ul>
+                            <li><strong>Memory:</strong> Higher overhead. Every node has two extra pointers (<code>before</code> and <code>after</code>).</li>
+                            <li><strong>Iteration:</strong> <code>O(Size)</code>. This is actually <strong style="color:var(--accent-green)">faster</strong> than HashSet's <code>O(Capacity + Size)</code> because it walks the linked list directly instead of scanning empty buckets!</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-amber-bg);color:var(--accent-amber)">🔄</span> How Rehashing Works</h3>
+                        <p style="margin-bottom:10px">When the load factor (0.75) is reached, the capacity doubles.</p>
+                        <ul>
+                            <li>The array of buckets is rebuilt.</li>
+                            <li>Rehashing walks through the <strong>Linked List</strong> to redistribute elements into the new buckets.</li>
+                            <li><strong>The linked list structure is preserved perfectly</strong>, so iteration order remains identical before and after a rehash!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -274,39 +353,77 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 </div>
 
 <script>
-/* ===== SimLinkedHashSet ===== */
+/* ===== SimLinkedHashSet — open addressing (one value per bucket) + insertion-order list ===== */
 class SimLinkedHashSet {
-    constructor() { this.capacity = 16; this.loadFactor = 0.75; this.buckets = new Array(16).fill(null).map(() => []); this._size = 0; this.order = []; }
+    constructor() { this.capacity = 16; this.loadFactor = 0.75; this.buckets = new Array(16).fill(null); this._size = 0; this.order = []; }
     get size() { return this._size; }
     get threshold() { return Math.floor(this.capacity * this.loadFactor); }
     get currentLoadFactor() { return this._size / this.capacity; }
     _hash(v) { let h = v | 0; h ^= (h >>> 16); return h; }
-    _idx(v) { return this._hash(v) & (this.capacity - 1); }
+    _initialIdx(v) { return this._hash(v) & (this.capacity - 1); }
+    _findSlot(v) {
+        const n = this.capacity, start = this._initialIdx(v);
+        for (let step = 0; step < n; step++) {
+            const i = (start + step) & (n - 1);
+            if (this.buckets[i] === null) return { foundIdx: -1, emptyIdx: i };
+            if (this.buckets[i] === v) return { foundIdx: i, emptyIdx: -1 };
+        }
+        return { foundIdx: -1, emptyIdx: -1 };
+    }
 
     add(v) {
-        const idx = this._idx(v);
-        const b = this.buckets[idx];
-        for (let i = 0; i < b.length; i++) if (b[i] === v) return { added: false, idx, chainPos: i, rehashed: false };
-        b.push(v); this.order.push(v); this._size++;
-        if (this._size > this.threshold) { const oc = this.capacity; this._rehash(); const ni = this._idx(v); return { added: true, idx, rehashed: true, oldCap: oc, newCap: this.capacity, newIdx: ni }; }
-        return { added: true, idx, chainPos: b.length - 1, rehashed: false };
+        const r = this._findSlot(v);
+        if (r.foundIdx !== -1) return { added: false, placedIdx: r.foundIdx, rehashed: false };
+        const placedIdx = r.emptyIdx;
+        this.buckets[placedIdx] = v;
+        this.order.push(v);
+        this._size++;
+        if (this._size > this.threshold) {
+            const oldCap = this.capacity;
+            this._rehash();
+            const newPlacedIdx = this.buckets.indexOf(v);
+            return { added: true, placedIdx, rehashed: true, oldCap, newCap: this.capacity, newPlacedIdx };
+        }
+        return { added: true, placedIdx, rehashed: false };
     }
     remove(v) {
-        const idx = this._idx(v);
-        const b = this.buckets[idx];
-        for (let i = 0; i < b.length; i++) {
-            if (b[i] === v) { b.splice(i, 1); this._size--; const oi = this.order.indexOf(v); if (oi >= 0) this.order.splice(oi, 1); return { removed: true, idx, chainPos: i, orderIdx: oi }; }
+        const r = this._findSlot(v);
+        if (r.foundIdx === -1) return { removed: false };
+        const removedIdx = r.foundIdx;
+        this.buckets[removedIdx] = null;
+        this._size--;
+        const oi = this.order.indexOf(v);
+        if (oi >= 0) this.order.splice(oi, 1);
+        // Fix probe chain: re-insert subsequent elements until we hit an empty slot
+        const n = this.capacity;
+        let i = (removedIdx + 1) & (n - 1);
+        while (this.buckets[i] !== null) {
+            const moved = this.buckets[i];
+            this.buckets[i] = null;
+            this._size--;
+            const rr = this._findSlot(moved);
+            this.buckets[rr.emptyIdx] = moved;
+            this._size++;
+            i = (i + 1) & (n - 1);
         }
-        return { removed: false, idx };
+        return { removed: true, placedIdx: removedIdx, orderIdx: oi };
     }
-    contains(v) { const idx = this._idx(v); const b = this.buckets[idx]; for (let i = 0; i < b.length; i++) if (b[i] === v) return { found: true, idx, chainPos: i }; return { found: false, idx }; }
+    contains(v) {
+        const r = this._findSlot(v);
+        return { found: r.foundIdx !== -1, placedIdx: r.foundIdx };
+    }
     _rehash() {
-        const old = this.buckets; this.capacity *= 2;
-        this.buckets = new Array(this.capacity).fill(null).map(() => []);
+        this.capacity *= 2;
+        this.buckets = new Array(this.capacity).fill(null);
         this._size = 0;
-        for (const b of old) for (const v of b) { this.buckets[this._idx(v)].push(v); this._size++; }
+        // LinkedHashSet rehashes by walking the doubly-linked list (insertion order preserved)
+        for (const v of this.order) {
+            const r = this._findSlot(v);
+            this.buckets[r.emptyIdx] = v;
+            this._size++;
+        }
     }
-    clear() { this.capacity = 16; this.buckets = new Array(16).fill(null).map(() => []); this._size = 0; this.order = []; }
+    clear() { this.capacity = 16; this.buckets = new Array(16).fill(null); this._size = 0; this.order = []; }
 }
 
 /* ===== Visualizer ===== */
@@ -346,19 +463,27 @@ class SimLinkedHashSet {
         lfThresh.style.left = (lhs.loadFactor * 100) + '%';
     }
 
-    function showHash(v) {
-        const h = lhs._hash(v); const idx = h & (lhs.capacity - 1);
-        hashDisplay.innerHTML = `<span class="hl">${v}</span> <span class="op">→ hash =</span> <span class="hl">${h}</span> <span class="op">→</span> <span class="hl">${h}</span> <span class="op">&amp; ${lhs.capacity-1} =</span> <span class="result">bucket[${idx}]</span>`;
+    function showHash(v, placedIdx) {
+        const h = lhs._hash(v);
+        hashDisplay.innerHTML = `<span class="hl">${v}</span> <span class="op">→ hash =</span> <span class="hl">${h}</span> <span class="op">→</span> <span class="result">bucket[${placedIdx}]</span>`;
     }
 
-    function renderBuckets(hlBucket=-1, hlType='', hlChain=-1) {
+    function renderBuckets(hlBucket=-1, hlType='') {
         let html = '';
         for (let i = 0; i < lhs.capacity; i++) {
-            const b = lhs.buckets[i]; const isHl = i === hlBucket;
-            let sc = b.length === 0 ? 'empty' : ''; if (isHl) sc += ` hl-${hlType}`;
+            const val = lhs.buckets[i];
+            const isHl = i === hlBucket;
+            const isEmpty = val === null;
+            let sc = isEmpty ? 'empty' : '';
+            if (isHl) sc += ` hl-${hlType}`;
             html += `<div class="bucket-col"><div class="bucket-idx">[${i}]</div><div class="bucket-slot ${sc}">`;
-            if (b.length === 0) { html += `<div class="chain-node" style="color:var(--text-muted);opacity:0.3;font-size:0.6rem">—</div>`; }
-            else { for (let j = 0; j < b.length; j++) { let nc = ''; if (isHl && j === hlChain) nc = `hl-${hlType==='target'?'add':hlType==='search'?'found':'remove'}`; else if (isHl && hlChain===-1) nc='hl-traverse'; html += `<div class="chain-node ${nc}">${b[j]}</div>`; if (j < b.length-1) html += `<div class="chain-arrow">▼</div>`; } }
+            if (isEmpty) {
+                html += `<div class="chain-node" style="color:var(--text-muted);opacity:0.3;font-size:0.6rem">—</div>`;
+            } else {
+                let nc = '';
+                if (isHl) nc = `hl-${hlType==='target'?'add':hlType==='search'?'found':'remove'}`;
+                html += `<div class="chain-node ${nc}">${val}</div>`;
+            }
             html += '</div></div>';
         }
         bucketGrid.innerHTML = html; updateStats();
@@ -379,51 +504,75 @@ class SimLinkedHashSet {
         orderChain.innerHTML = html;
     }
 
-    function renderAll(hlB=-1, hlT='', hlC=-1, hlO=-1, hlOT='') { renderBuckets(hlB,hlT,hlC); renderOrder(hlO,hlOT); }
+    function renderAll(hlB=-1, hlT='', hlO=-1, hlOT='') { renderBuckets(hlB,hlT); renderOrder(hlO,hlOT); }
 
     function getVal(){const v=parseInt(valueInput.value);if(isNaN(v)){setInfo('⚠️ Enter a valid integer.','');return null}return v}
 
     async function handleAdd(){
-        const v=getVal();if(v===null)return; setAnimating(true); showHash(v); const d=getDelay();
-        const ti = lhs._idx(v);
-        renderAll(ti,'target',-1); setInfo(`🔍 hash(${v}) → bucket[<strong>${ti}</strong>]`,'add'); await sleep(d);
-        const r = lhs.add(v);
-        if (!r.added) {
-            renderAll(r.idx,'search',-1); setInfo(`⚠️ <strong>${v}</strong> already exists. No duplicates in Set.`,'search'); logMsg(`add(${v}) → false (dup)`,'search');
+        const v=getVal();if(v===null)return; setAnimating(true); const d=getDelay();
+
+        const probe = lhs.contains(v);
+        if (probe.found) {
+            showHash(v, probe.placedIdx);
+            renderAll(probe.placedIdx,'search');
+            setInfo(`⚠️ <strong>${v}</strong> already exists at bucket[${probe.placedIdx}]. No duplicates in Set.`,'search');
+            logMsg(`add(${v}) → false (dup)`,'search');
             await sleep(d); renderAll(); setAnimating(false); return;
         }
+
+        const r = lhs.add(v);
+        const idx = r.rehashed ? r.newPlacedIdx : r.placedIdx;
+        showHash(v, idx);
+
         if (r.rehashed) {
             rehashText.textContent = `Capacity: ${r.oldCap} → ${r.newCap}. Order preserved.`;
             rehashOverlay.classList.add('active'); logMsg(`Rehash! ${r.oldCap} → ${r.newCap}`,'rehash');
             setInfo(`🔄 <strong>Rehash!</strong> ${r.oldCap} → <strong>${r.newCap}</strong>. Insertion order preserved.`,'rehash');
-            await sleep(d*2); rehashOverlay.classList.remove('active'); showHash(v);
-            renderAll(r.newIdx,'target',-1,lhs.order.length-1,'add');
-        } else {
-            const col = lhs.buckets[r.idx].length > 1;
-            renderAll(r.idx,'target',r.chainPos,lhs.order.length-1,'add');
-            setInfo(`✅ <strong>add(${v})</strong> → bucket[${r.idx}]${col?' ⚡ Collision!':''}. Appended to tail of insertion-order list. Size: <strong>${lhs.size}</strong>`,'add');
+            await sleep(d*2); rehashOverlay.classList.remove('active'); showHash(v, idx);
         }
-        logMsg(`add(${v}) → true. bucket[${r.rehashed?r.newIdx:r.idx}]. size=${lhs.size}`,'add');
+
+        renderAll(idx,'target',lhs.order.length-1,'add');
+        setInfo(`✅ <strong>add(${v})</strong> → bucket[<strong>${idx}</strong>]. Appended to tail of insertion-order list. Size: <strong>${lhs.size}</strong>`,'add');
+        logMsg(`add(${v}) → true. bucket[${idx}]. size=${lhs.size}`,'add');
         await sleep(d); renderAll(); valueInput.value=''; valueInput.focus(); setAnimating(false);
     }
 
     async function handleRemove(){
-        const v=getVal();if(v===null)return; setAnimating(true); showHash(v); const d=getDelay();
-        const ti = lhs._idx(v);
-        renderAll(ti,'search'); setInfo(`🔍 Searching bucket[${ti}] for <strong>${v}</strong>...`,'search'); await sleep(d);
-        const r = lhs.remove(v);
-        if (!r.removed) { setInfo(`⚠️ <strong>${v}</strong> not found.`,'search'); logMsg(`remove(${v}) → false`,'search'); await sleep(d); renderAll(); setAnimating(false); return; }
-        renderAll(ti,'remove',-1); setInfo(`🗑️ <strong>remove(${v})</strong> — removed from bucket + unlinked from order chain. Size: <strong>${lhs.size}</strong>`,'remove');
+        const v=getVal();if(v===null)return; setAnimating(true); const d=getDelay();
+        const probe = lhs.contains(v);
+
+        if (!probe.found) {
+            setInfo(`⚠️ <strong>${v}</strong> not found.`,'search');
+            logMsg(`remove(${v}) → false`,'search');
+            await sleep(d); renderAll(); setAnimating(false); return;
+        }
+
+        const foundIdx = probe.placedIdx;
+        showHash(v, foundIdx);
+        renderAll(foundIdx,'remove');
+        setInfo(`🗑️ Found <strong>${v}</strong> at bucket[${foundIdx}]. Removing and unlinking from order chain...`,'remove');
+        await sleep(d);
+
+        lhs.remove(v);
+        setInfo(`🗑️ <strong>remove(${v})</strong> — cleared bucket[${foundIdx}]. Size: <strong>${lhs.size}</strong>`,'remove');
         logMsg(`remove(${v}) → true. size=${lhs.size}`,'remove');
-        await sleep(d); renderAll(); valueInput.value=''; valueInput.focus(); setAnimating(false);
+        await sleep(d*0.5); renderAll(); valueInput.value=''; valueInput.focus(); setAnimating(false);
     }
 
     async function handleContains(){
-        const v=getVal();if(v===null)return; setAnimating(true); showHash(v); const d=getDelay();
-        const ti = lhs._idx(v); renderAll(ti,'search'); setInfo(`🔍 Searching bucket[${ti}]...`,'search'); await sleep(d);
-        const r = lhs.contains(v);
-        if (r.found) { renderAll(ti,'search',r.chainPos); setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>`,'search'); logMsg(`contains(${v}) → true`,'search'); }
-        else { setInfo(`❌ <strong>contains(${v})</strong> → <strong>false</strong>`,'search'); logMsg(`contains(${v}) → false`,'search'); }
+        const v=getVal();if(v===null)return; setAnimating(true); const d=getDelay();
+        const probe = lhs.contains(v);
+
+        if (probe.found) {
+            showHash(v, probe.placedIdx);
+            renderAll(probe.placedIdx,'search');
+            setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>. Found at bucket[${probe.placedIdx}].`,'search');
+            logMsg(`contains(${v}) → true`,'search');
+        } else {
+            hashDisplay.innerHTML = `<span class="hl">${v}</span> <span class="op">→ not in set</span>`;
+            setInfo(`❌ <strong>contains(${v})</strong> → <strong>false</strong>`,'search');
+            logMsg(`contains(${v}) → false`,'search');
+        }
         await sleep(d*1.5); renderAll(); setAnimating(false);
     }
 
@@ -441,12 +590,22 @@ class SimLinkedHashSet {
 
     async function handleSample(){
         lhs.clear(); renderAll(); setAnimating(true);
-        const vals=[10,25,3,42,18,7,33,15,28,50]; logMsg(`Loading: add(${vals.join(', ')})`,'info'); const d=getDelay();
+        const vals=[10,25,3,42,18,7,33,15,28,50,66,81,4]; logMsg(`Loading: add(${vals.join(', ')})`,'info'); const d=getDelay();
         for (const v of vals) {
-            showHash(v); const r = lhs.add(v);
-            if (r.rehashed) { rehashText.textContent=`${r.oldCap} → ${r.newCap}`; rehashOverlay.classList.add('active'); await sleep(d); rehashOverlay.classList.remove('active'); showHash(v); renderAll(r.newIdx,'target',-1,lhs.order.length-1,'add'); }
-            else renderAll(r.idx,'target',r.chainPos,lhs.order.length-1,'add');
-            logMsg(`add(${v})`,'add'); await sleep(d*0.4); renderAll(); await sleep(60);
+            const r = lhs.add(v);
+            const idx = r.rehashed ? r.newPlacedIdx : r.placedIdx;
+            showHash(v, idx);
+            if (r.rehashed) {
+                rehashText.textContent=`${r.oldCap} → ${r.newCap}`;
+                rehashOverlay.classList.add('active');
+                logMsg(`Rehash! ${r.oldCap} → ${r.newCap}`,'rehash');
+                await sleep(d);
+                rehashOverlay.classList.remove('active');
+                showHash(v, idx);
+            }
+            renderAll(idx,'target',lhs.order.length-1,'add');
+            logMsg(`add(${v}) → bucket[${idx}]`,'add');
+            await sleep(d*0.4); renderAll(); await sleep(60);
         }
         setInfo(`✅ Loaded. Insertion order: [${lhs.order.join(' → ')}]. Try <strong>iterate()</strong>!`,'add'); renderAll(); setAnimating(false);
     }
@@ -461,6 +620,11 @@ class SimLinkedHashSet {
     clearBtn.addEventListener('click',handleClear);
     sampleBtn.addEventListener('click',handleSample);
     clearLogBtn.addEventListener('click',()=>{logContainer.innerHTML='';logMsg('Log cleared.','info')});
+
+    /* Theory section toggle */
+    const theorySection = $('theorySection'), theoryToggle = $('theoryToggle');
+    theoryToggle.addEventListener('click', () => theorySection.classList.toggle('open'));
+
     renderAll();
 })();
 </script>

@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='j' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f89820'/%3E%3Cstop offset='1' stop-color='%23e25303'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M24 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M32 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M12 30h34v8c0 14-34 14-34 0z' fill='url(%23j)'/%3E%3Cpath d='M46 33h6c6 0 6 10 0 10h-6' fill='none' stroke='url(%23j)' stroke-width='3'/%3E%3Cpath d='M8 52h48' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M14 56h36' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HashSet Visualizer — Hash Table with Bucket Array</title>
-    <meta name="description" content="Interactive hash table visualizer for Java HashSet. See bucket arrays, hash computation, collision chaining, load factor threshold, and rehashing.">
+    <meta name="description" content="Interactive hash table visualizer for Java HashSet. See bucket arrays, hash computation, load factor threshold, and rehashing at 75% capacity.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
 :root{
@@ -152,14 +152,50 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .log-entry.log-rehash{color:var(--accent-orange);background:rgba(255,145,0,0.08)}
 .log-entry.log-info{color:var(--text-muted)}
 
+/* ===== Theory Section ===== */
+.theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
+.theory-toggle:hover{background:rgba(255,255,255,0.02)}
+.theory-toggle h2{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-secondary)}
+.theory-toggle h2 .accent{color:var(--accent-orange)}
+.toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
+.theory-section.open .toggle-chevron{transform:rotate(180deg)}
+.theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.theory-section.open .theory-body{max-height:3500px}
+.theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
+.theory-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.theory-card:hover{border-color:var(--border-glow)}
+.theory-card h3{font-size:0.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.theory-card h3 .icon{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.theory-card p,.theory-card li{font-size:0.76rem;color:var(--text-secondary);line-height:1.7}
+.theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+.theory-full{grid-column:1/-1}
+.complexity-table{width:100%;border-collapse:collapse;margin-top:8px}
+.complexity-table th,.complexity-table td{padding:8px 12px;font-size:0.72rem;text-align:left;border-bottom:1px solid var(--border-subtle)}
+.complexity-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.62rem;letter-spacing:0.08em}
+.complexity-table td{font-family:var(--font-mono);color:var(--text-primary);font-weight:600}
+.complexity-table td:first-child{font-family:var(--font);color:var(--text-secondary)}
+.complexity-table .good{color:var(--accent-green)}
+.complexity-table .warn{color:var(--accent-amber)}
+.complexity-table .bad{color:var(--accent-red)}
+
 @media(max-width:900px){.header,.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
 @media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.bucket-col{min-width:56px}.bucket-slot{width:56px}.chain-node{font-size:0.7rem;padding:6px 2px}}
+.home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:0.72rem;font-weight:600;text-decoration:none;transition:all var(--transition)}
+.home-link:hover{background:rgba(255,255,255,0.08);color:var(--text-primary);border-color:var(--border-glow)}
     </style>
 </head>
 <body>
 <div class="app">
     <header class="header">
         <div class="header-left">
+            <a href="../index.html" class="home-link" aria-label="Back to Home" title="Back to Home">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                Home
+            </a>
             <div class="logo-icon">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -168,7 +204,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
             </div>
             <div>
                 <h1>HashSet Visualizer</h1>
-                <p class="subtitle">Java Collections — Hash Table with Separate Chaining</p>
+                <p class="subtitle">Java Collections — Hash Table with Open Addressing</p>
             </div>
         </div>
         <div class="header-right">
@@ -197,6 +233,59 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
                 Load Example
             </button>
             <div class="speed-control"><label>Speed</label><input type="range" id="speedSlider" min="1" max="5" value="3" step="1"></div>
+        </div>
+    </div>
+
+    <!-- Theory Section -->
+    <div class="theory-section" id="theorySection">
+        <button class="theory-toggle" id="theoryToggle" type="button">
+            <h2>📖 <span class="accent">What is a Hash Table?</span> — HashSet Internals</h2>
+            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="theory-body">
+            <div class="theory-inner">
+                <div class="theory-grid">
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-amber-bg);color:var(--accent-amber)">#️⃣</span> Hash Table Array</h3>
+                        <p style="margin-bottom:10px">A HashSet stores elements in an array of "buckets". The index is computed using a hash function:</p>
+                        <ul>
+                            <li><strong>Hash code</strong> maps the object to an integer</li>
+                            <li><strong>Modulo/Masking</strong> <code>hash & (capacity - 1)</code> maps the hash to an array index</li>
+                            <li>Provides <code>O(1)</code> average time complexity for access, insert, and delete!</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-red-bg);color:var(--accent-red)">⚡</span> One Value Per Bucket</h3>
+                        <p style="margin-bottom:10px">In this visualization, <strong>every element gets its own unique bucket slot</strong>. When two keys compute to the same index:</p>
+                        <ul>
+                            <li>The hash function points to a starting slot</li>
+                            <li>If that slot is taken, the next empty slot is used — so <strong>no slot ever holds more than one value</strong></li>
+                            <li>Keeps the visualization clean: the bucket array is always a flat map of index → value</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-blue-bg);color:var(--accent-blue)">📈</span> Load Factor & Rehashing</h3>
+                        <p style="margin-bottom:10px">As the set fills up, collisions become too frequent, slowing down performance. <code>Load Factor = size / capacity</code>.</p>
+                        <ul>
+                            <li><strong>Default Load Factor Threshold:</strong> <code>0.75</code> (75% full)</li>
+                            <li><strong>Rehashing:</strong> When threshold is exceeded, Java creates a new array <strong>2x the size</strong>.</li>
+                            <li>All elements are re-hashed and moved to the new array, keeping chains short and restoring O(1) performance.</li>
+                        </ul>
+                    </div>
+
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:rgba(255,145,0,0.1);color:#ff9100">☕</span> Java HashSet Caveats</h3>
+                        <ul>
+                            <li>Backed internally by a <code>HashMap</code> (the elements are keys, values are dummy objects)</li>
+                            <li><strong>Unordered:</strong> Iteration order is unpredictable and will completely change after a rehash!</li>
+                            <li>Accepts exactly one <code>null</code> element</li>
+                            <li>Not thread-safe (Use <code>ConcurrentHashMap.newKeySet()</code> for concurrent access)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -255,12 +344,12 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 </div>
 
 <script>
-/* ===== SimHashSet — simplified Java HashSet internals ===== */
+/* ===== SimHashSet — open addressing with linear probing (one value per bucket) ===== */
 class SimHashSet {
     constructor() {
         this.capacity = 16;
         this.loadFactor = 0.75;
-        this.buckets = new Array(this.capacity).fill(null).map(() => []);
+        this.buckets = new Array(this.capacity).fill(null);
         this._size = 0;
     }
 
@@ -275,61 +364,72 @@ class SimHashSet {
         return h;
     }
 
-    _bucketIndex(val) {
-        return (this._hash(val) & (this.capacity - 1));
+    _initialIdx(val) {
+        return this._hash(val) & (this.capacity - 1);
+    }
+
+    // Linear probing: find either the value or the first empty slot
+    _findSlot(val) {
+        const n = this.capacity;
+        const start = this._initialIdx(val);
+        for (let step = 0; step < n; step++) {
+            const i = (start + step) & (n - 1);
+            if (this.buckets[i] === null) return { foundIdx: -1, emptyIdx: i };
+            if (this.buckets[i] === val) return { foundIdx: i, emptyIdx: -1 };
+        }
+        return { foundIdx: -1, emptyIdx: -1 };
     }
 
     add(val) {
-        const idx = this._bucketIndex(val);
-        const bucket = this.buckets[idx];
-        // Check for duplicate
-        for (let i = 0; i < bucket.length; i++) {
-            if (bucket[i] === val) return { added: false, idx, chainPos: i, rehashed: false };
-        }
-        bucket.push(val);
+        const r = this._findSlot(val);
+        if (r.foundIdx !== -1) return { added: false, placedIdx: r.foundIdx, rehashed: false };
+        const placedIdx = r.emptyIdx;
+        this.buckets[placedIdx] = val;
         this._size++;
-        // Check if rehash needed
         if (this._size > this.threshold) {
             const oldCap = this.capacity;
             this._rehash();
-            const newIdx = this._bucketIndex(val);
-            const newChainPos = this.buckets[newIdx].indexOf(val);
-            return { added: true, idx, chainPos: bucket.length - 1, rehashed: true, oldCap, newCap: this.capacity, newIdx, newChainPos };
+            const newPlacedIdx = this.buckets.indexOf(val);
+            return { added: true, placedIdx, rehashed: true, oldCap, newCap: this.capacity, newPlacedIdx };
         }
-        return { added: true, idx, chainPos: bucket.length - 1, rehashed: false };
+        return { added: true, placedIdx, rehashed: false };
     }
 
     remove(val) {
-        const idx = this._bucketIndex(val);
-        const bucket = this.buckets[idx];
-        for (let i = 0; i < bucket.length; i++) {
-            if (bucket[i] === val) {
-                bucket.splice(i, 1);
-                this._size--;
-                return { removed: true, idx, chainPos: i };
-            }
+        const r = this._findSlot(val);
+        if (r.foundIdx === -1) return { removed: false };
+        const removedIdx = r.foundIdx;
+        this.buckets[removedIdx] = null;
+        this._size--;
+        // Fix probe chain: re-insert any subsequent elements until we hit an empty slot
+        const n = this.capacity;
+        let i = (removedIdx + 1) & (n - 1);
+        while (this.buckets[i] !== null) {
+            const moved = this.buckets[i];
+            this.buckets[i] = null;
+            this._size--;
+            const rr = this._findSlot(moved);
+            this.buckets[rr.emptyIdx] = moved;
+            this._size++;
+            i = (i + 1) & (n - 1);
         }
-        return { removed: false, idx };
+        return { removed: true, placedIdx: removedIdx };
     }
 
     contains(val) {
-        const idx = this._bucketIndex(val);
-        const bucket = this.buckets[idx];
-        for (let i = 0; i < bucket.length; i++) {
-            if (bucket[i] === val) return { found: true, idx, chainPos: i };
-        }
-        return { found: false, idx };
+        const r = this._findSlot(val);
+        return { found: r.foundIdx !== -1, placedIdx: r.foundIdx };
     }
 
     _rehash() {
-        const oldBuckets = this.buckets;
+        const old = this.buckets;
         this.capacity *= 2;
-        this.buckets = new Array(this.capacity).fill(null).map(() => []);
+        this.buckets = new Array(this.capacity).fill(null);
         this._size = 0;
-        for (const bucket of oldBuckets) {
-            for (const val of bucket) {
-                const idx = this._bucketIndex(val);
-                this.buckets[idx].push(val);
+        for (const v of old) {
+            if (v !== null) {
+                const r = this._findSlot(v);
+                this.buckets[r.emptyIdx] = v;
                 this._size++;
             }
         }
@@ -337,14 +437,12 @@ class SimHashSet {
 
     clear() {
         this.capacity = 16;
-        this.buckets = new Array(this.capacity).fill(null).map(() => []);
+        this.buckets = new Array(this.capacity).fill(null);
         this._size = 0;
     }
 
     allElements() {
-        const all = [];
-        for (const b of this.buckets) all.push(...b);
-        return all;
+        return this.buckets.filter(v => v !== null);
     }
 }
 
@@ -385,31 +483,27 @@ class SimHashSet {
         lfThresh.style.left = (hs.loadFactor * 100) + '%';
     }
 
-    function showHash(val) {
+    function showHash(val, placedIdx) {
         const h = hs._hash(val);
-        const idx = h & (hs.capacity - 1);
-        hashDisplay.innerHTML = `<span class="hl">${val}</span> <span class="op">→ hash =</span> <span class="hl">${h}</span> <span class="op">→</span> <span class="hl">${h}</span> <span class="op">&amp; ${hs.capacity - 1} =</span> <span class="result">bucket[${idx}]</span>`;
+        hashDisplay.innerHTML = `<span class="hl">${val}</span> <span class="op">→ hash =</span> <span class="hl">${h}</span> <span class="op">→</span> <span class="result">bucket[${placedIdx}]</span>`;
     }
 
-    /* ===== Render Buckets ===== */
-    function renderBuckets(hlBucket = -1, hlType = '', hlChainPos = -1) {
+    /* ===== Render Buckets (one value per slot) ===== */
+    function renderBuckets(hlBucket = -1, hlType = '') {
         let html = '';
         for (let i = 0; i < hs.capacity; i++) {
-            const bucket = hs.buckets[i];
+            const val = hs.buckets[i];
             const isHl = i === hlBucket;
-            let slotCls = bucket.length === 0 ? 'empty' : '';
+            const isEmpty = val === null;
+            let slotCls = isEmpty ? 'empty' : '';
             if (isHl) slotCls += ` hl-${hlType}`;
             html += `<div class="bucket-col"><div class="bucket-idx">[${i}]</div><div class="bucket-slot ${slotCls}">`;
-            if (bucket.length === 0) {
+            if (isEmpty) {
                 html += `<div class="chain-node" style="color:var(--text-muted);opacity:0.3;font-size:0.6rem">—</div>`;
             } else {
-                for (let j = 0; j < bucket.length; j++) {
-                    let nodeCls = '';
-                    if (isHl && j === hlChainPos) nodeCls = `hl-${hlType === 'target' ? 'add' : hlType === 'search' ? 'found' : 'remove'}`;
-                    else if (isHl && hlChainPos === -1) nodeCls = `hl-traverse`;
-                    html += `<div class="chain-node ${nodeCls}">${bucket[j]}</div>`;
-                    if (j < bucket.length - 1) html += `<div class="chain-arrow">▼</div>`;
-                }
+                let nodeCls = '';
+                if (isHl) nodeCls = `hl-${hlType === 'target' ? 'add' : hlType === 'search' ? 'found' : 'remove'}`;
+                html += `<div class="chain-node ${nodeCls}">${val}</div>`;
             }
             html += '</div></div>';
         }
@@ -423,40 +517,36 @@ class SimHashSet {
     async function handleAdd(){
         const v=getVal();if(v===null)return;
         setAnimating(true);
-        showHash(v);
         const d=getDelay();
-        // Show target bucket
-        const targetIdx = hs._bucketIndex(v);
-        renderBuckets(targetIdx, 'target');
-        setInfo(`🔍 Computing hash for <strong>${v}</strong> → bucket[<strong>${targetIdx}</strong>]`, 'add');
-        await sleep(d);
 
-        const result = hs.add(v);
-        if (!result.added) {
-            renderBuckets(result.idx, 'search', result.chainPos);
-            setInfo(`⚠️ <strong>${v}</strong> already exists in bucket[${result.idx}]. Set does not allow duplicates.`, 'search');
+        // Check duplicate first
+        const probe = hs.contains(v);
+        if (probe.found) {
+            showHash(v, probe.placedIdx);
+            renderBuckets(probe.placedIdx, 'search');
+            setInfo(`⚠️ <strong>${v}</strong> already exists at bucket[${probe.placedIdx}]. Set does not allow duplicates.`, 'search');
             logMsg(`add(${v}) → false (duplicate)`, 'search');
             await sleep(d);
             renderBuckets(); setAnimating(false); return;
         }
 
+        const result = hs.add(v);
+        const idx = result.rehashed ? result.newPlacedIdx : result.placedIdx;
+        showHash(v, idx);
+
         if (result.rehashed) {
-            // Show rehash
             rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}. Redistributing ${hs.size} elements.`;
             rehashOverlay.classList.add('active');
             logMsg(`Rehash! capacity ${result.oldCap} → ${result.newCap}`, 'rehash');
-            setInfo(`🔄 <strong>Rehash triggered!</strong> Size ${hs.size} exceeded threshold ${Math.floor(result.oldCap * 0.75)}. Capacity: ${result.oldCap} → <strong>${result.newCap}</strong>`, 'rehash');
+            setInfo(`🔄 <strong>Rehash triggered!</strong> Size ${hs.size} exceeded threshold ${Math.floor(result.oldCap * 0.75)} (75%). Capacity: ${result.oldCap} → <strong>${result.newCap}</strong>`, 'rehash');
             await sleep(d * 2);
             rehashOverlay.classList.remove('active');
-            showHash(v);
-            renderBuckets(result.newIdx, 'target', result.newChainPos);
-            logMsg(`add(${v}) → true. bucket[${result.newIdx}]. size=${hs.size}`, 'add');
-        } else {
-            renderBuckets(result.idx, 'target', result.chainPos);
-            const collision = hs.buckets[result.idx].length > 1;
-            logMsg(`add(${v}) → true. bucket[${result.idx}]${collision ? ' (collision! chain length='+hs.buckets[result.idx].length+')' : ''}. size=${hs.size}`, 'add');
-            setInfo(`✅ <strong>add(${v})</strong> → bucket[<strong>${result.idx}</strong>]${collision ? ' ⚡ <strong>Collision!</strong> Chained at position ' + result.chainPos : ''}. Size: <strong>${hs.size}</strong>`, 'add');
+            showHash(v, idx);
         }
+
+        renderBuckets(idx, 'target');
+        setInfo(`✅ <strong>add(${v})</strong> → bucket[<strong>${idx}</strong>]. Size: <strong>${hs.size}</strong>`, 'add');
+        logMsg(`add(${v}) → true. bucket[${idx}]. size=${hs.size}`, 'add');
         await sleep(d);
         renderBuckets(); valueInput.value=''; valueInput.focus(); setAnimating(false);
     }
@@ -464,64 +554,43 @@ class SimHashSet {
     async function handleRemove(){
         const v=getVal();if(v===null)return;
         setAnimating(true);
-        showHash(v);
         const d=getDelay();
-        const targetIdx = hs._bucketIndex(v);
-        renderBuckets(targetIdx, 'search');
-        setInfo(`🔍 Searching bucket[<strong>${targetIdx}</strong>] for <strong>${v}</strong>...`, 'search');
-        await sleep(d);
+        const probe = hs.contains(v);
 
-        // Walk chain
-        const bucket = hs.buckets[targetIdx];
-        let foundPos = -1;
-        for (let i = 0; i < bucket.length; i++) {
-            renderBuckets(targetIdx, 'search', i);
-            await sleep(d * 0.3);
-            if (bucket[i] === v) { foundPos = i; break; }
-        }
-
-        if (foundPos === -1) {
-            setInfo(`⚠️ <strong>${v}</strong> not found in bucket[${targetIdx}].`, 'search');
+        if (!probe.found) {
+            setInfo(`⚠️ <strong>${v}</strong> not found in set.`, 'search');
             logMsg(`remove(${v}) → false`, 'search');
             await sleep(d);
             renderBuckets(); setAnimating(false); return;
         }
 
-        renderBuckets(targetIdx, 'remove', foundPos);
-        setInfo(`🗑️ Found <strong>${v}</strong> at bucket[${targetIdx}], chain position ${foundPos}. Removing...`, 'remove');
+        const foundIdx = probe.placedIdx;
+        showHash(v, foundIdx);
+        renderBuckets(foundIdx, 'remove');
+        setInfo(`🗑️ Found <strong>${v}</strong> at bucket[${foundIdx}]. Removing...`, 'remove');
         await sleep(d);
 
         hs.remove(v);
         logMsg(`remove(${v}) → true. size=${hs.size}`, 'remove');
-        setInfo(`🗑️ <strong>remove(${v})</strong> — removed from bucket[${targetIdx}]. Size: <strong>${hs.size}</strong>`, 'remove');
+        setInfo(`🗑️ <strong>remove(${v})</strong> — cleared bucket[${foundIdx}]. Size: <strong>${hs.size}</strong>`, 'remove');
+        await sleep(d * 0.5);
         renderBuckets(); valueInput.value=''; valueInput.focus(); setAnimating(false);
     }
 
     async function handleContains(){
         const v=getVal();if(v===null)return;
         setAnimating(true);
-        showHash(v);
         const d=getDelay();
-        const targetIdx = hs._bucketIndex(v);
-        renderBuckets(targetIdx, 'search');
-        setInfo(`🔍 Searching bucket[<strong>${targetIdx}</strong>] for <strong>${v}</strong>...`, 'search');
-        await sleep(d);
+        const probe = hs.contains(v);
 
-        // Walk chain
-        const bucket = hs.buckets[targetIdx];
-        let foundPos = -1;
-        for (let i = 0; i < bucket.length; i++) {
-            renderBuckets(targetIdx, 'search', i);
-            await sleep(d * 0.3);
-            if (bucket[i] === v) { foundPos = i; break; }
-        }
-
-        if (foundPos >= 0) {
-            renderBuckets(targetIdx, 'search', foundPos);
-            setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>. Found in bucket[${targetIdx}], chain position ${foundPos}.`, 'search');
+        if (probe.found) {
+            showHash(v, probe.placedIdx);
+            renderBuckets(probe.placedIdx, 'search');
+            setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>. Found at bucket[${probe.placedIdx}].`, 'search');
             logMsg(`contains(${v}) → true`, 'search');
         } else {
-            setInfo(`❌ <strong>contains(${v})</strong> → <strong>false</strong>. Not in bucket[${targetIdx}].`, 'search');
+            hashDisplay.innerHTML = `<span class="hl">${v}</span> <span class="op">→ not in set</span>`;
+            setInfo(`❌ <strong>contains(${v})</strong> → <strong>false</strong>.`, 'search');
             logMsg(`contains(${v}) → false`, 'search');
         }
         await sleep(d * 1.5);
@@ -539,24 +608,23 @@ class SimHashSet {
     async function handleSample(){
         hs.clear(); renderBuckets();
         setAnimating(true);
-        const vals = [5, 21, 37, 12, 8, 28, 15, 42, 3, 19];
+        const vals = [5, 21, 37, 12, 8, 28, 15, 42, 3, 19, 50, 71, 4];
         logMsg(`Loading: add(${vals.join(', ')})`, 'info');
         const d = getDelay();
         for (const v of vals) {
-            showHash(v);
             const result = hs.add(v);
+            const idx = result.rehashed ? result.newPlacedIdx : result.placedIdx;
+            showHash(v, idx);
             if (result.rehashed) {
                 rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}`;
                 rehashOverlay.classList.add('active');
                 logMsg(`Rehash! ${result.oldCap} → ${result.newCap}`, 'rehash');
                 await sleep(d);
                 rehashOverlay.classList.remove('active');
-                showHash(v);
-                renderBuckets(result.newIdx, 'target', result.newChainPos);
-            } else {
-                renderBuckets(result.idx, 'target', result.chainPos);
+                showHash(v, idx);
             }
-            logMsg(`add(${v}) → bucket[${result.rehashed ? result.newIdx : result.idx}]`, 'add');
+            renderBuckets(idx, 'target');
+            logMsg(`add(${v}) → bucket[${idx}]`, 'add');
             await sleep(d * 0.4);
             renderBuckets();
             await sleep(60);
@@ -575,6 +643,10 @@ class SimHashSet {
     clearBtn.addEventListener('click',handleClear);
     sampleBtn.addEventListener('click',handleSample);
     clearLogBtn.addEventListener('click',()=>{logContainer.innerHTML='';logMsg('Log cleared.','info')});
+
+    /* Theory section toggle */
+    const theorySection = $('theorySection'), theoryToggle = $('theoryToggle');
+    theoryToggle.addEventListener('click', () => theorySection.classList.toggle('open'));
 
     renderBuckets();
 })();
