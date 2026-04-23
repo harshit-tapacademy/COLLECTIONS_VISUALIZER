@@ -856,6 +856,18 @@
         --card-accent: rgba(233, 30, 99, 0.5);
         --card-glow: rgba(233, 30, 99, 0.04);
       }
+      .card-hashmap {
+        --card-accent: rgba(255, 193, 7, 0.5);
+        --card-glow: rgba(255, 193, 7, 0.04);
+      }
+      .card-linkedhashmap {
+        --card-accent: rgba(233, 30, 99, 0.5);
+        --card-glow: rgba(233, 30, 99, 0.04);
+      }
+      .card-treemap {
+        --card-accent: rgba(76, 175, 80, 0.5);
+        --card-glow: rgba(76, 175, 80, 0.04);
+      }
 
       .card-icon {
         width: 56px;
@@ -927,6 +939,33 @@
         );
         color: #fff;
         box-shadow: 0 0 24px rgba(233, 30, 99, 0.3);
+      }
+      .card-icon-hashmap {
+        background: linear-gradient(
+          135deg,
+          var(--accent-amber),
+          #ff6d00
+        );
+        color: #000;
+        box-shadow: 0 0 24px rgba(255, 193, 7, 0.3);
+      }
+      .card-icon-linkedhashmap {
+        background: linear-gradient(
+          135deg,
+          #e91e63,
+          var(--accent-purple)
+        );
+        color: #fff;
+        box-shadow: 0 0 24px rgba(233, 30, 99, 0.3);
+      }
+      .card-icon-treemap {
+        background: linear-gradient(
+          135deg,
+          #4caf50,
+          var(--accent-teal)
+        );
+        color: #000;
+        box-shadow: 0 0 24px rgba(76, 175, 80, 0.3);
       }
 
       .card-title {
@@ -1008,6 +1047,15 @@
       }
       .card-linkedhashset .card-cta {
         color: #f48fb1;
+      }
+      .card-hashmap .card-cta {
+        color: var(--accent-amber);
+      }
+      .card-linkedhashmap .card-cta {
+        color: #f48fb1;
+      }
+      .card-treemap .card-cta {
+        color: #66bb6a;
       }
 
       /* ===== Stats Bar ===== */
@@ -1351,7 +1399,7 @@
     <div class="section" style="padding-top: 0; padding-bottom: 0">
       <div class="stats-bar reveal">
         <div class="stat-item">
-          <div class="stat-value">7</div>
+          <div class="stat-value">10</div>
           <div class="stat-label">Collections Visualized</div>
         </div>
         <div class="stat-item">
@@ -1772,6 +1820,186 @@
             <span class="card-tag">contains(e)</span>
             <span class="card-tag">iterate()</span>
             <span class="card-tag">insertion order</span>
+          </div>
+          <div class="card-cta">
+            Open Visualizer
+            <svg
+              class="arrow"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </a>
+
+        <!-- 8. HashMap Card -->
+        <a
+          href="HashMap/index.html"
+          target="_blank"
+          class="collection-card card-hashmap"
+          id="card-hashmap"
+        >
+          <div class="card-icon card-icon-hashmap">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="3" y1="15" x2="21" y2="15" />
+              <line x1="12" y1="3" x2="12" y2="21" />
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">HashMap</div>
+            <div class="card-subtitle">Hash Table — Key → Value Mapping</div>
+          </div>
+          <p class="card-desc">
+            See the bucket array, hash computation
+            (<code>hash & (n-1)</code>), separate chaining collisions,
+            load factor tracking, and automatic rehashing with capacity
+            doubling. The most-used Map implementation.
+          </p>
+          <div class="card-tags">
+            <span class="card-tag">put(k,v)</span>
+            <span class="card-tag">get(k)</span>
+            <span class="card-tag">remove(k)</span>
+            <span class="card-tag">containsKey</span>
+            <span class="card-tag">rehash</span>
+            <span class="card-tag">O(1) avg</span>
+          </div>
+          <div class="card-cta">
+            Open Visualizer
+            <svg
+              class="arrow"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </a>
+
+        <!-- 9. LinkedHashMap Card -->
+        <a
+          href="LinkedHashMap/index.html"
+          target="_blank"
+          class="collection-card card-linkedhashmap"
+          id="card-linkedhashmap"
+        >
+          <div class="card-icon card-icon-linkedhashmap">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="3" y1="9" x2="21" y2="9" />
+              <line x1="3" y1="15" x2="21" y2="15" />
+              <line x1="12" y1="3" x2="12" y2="21" />
+              <path d="M6 6h.01M18 6h.01M6 12h.01M18 12h.01" stroke-width="3" />
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">LinkedHashMap</div>
+            <div class="card-subtitle">
+              Hash Table + Doubly-Linked List (Insertion Order)
+            </div>
+          </div>
+          <p class="card-desc">
+            Same hash table as HashMap, but with a doubly-linked list
+            preserving insertion order. See the DLL head↔tail chain and
+            learn how to build an <code>LRU cache</code> with access-order mode.
+          </p>
+          <div class="card-tags">
+            <span class="card-tag">put(k,v)</span>
+            <span class="card-tag">get(k)</span>
+            <span class="card-tag">remove(k)</span>
+            <span class="card-tag">insertion order</span>
+            <span class="card-tag">LRU cache</span>
+          </div>
+          <div class="card-cta">
+            Open Visualizer
+            <svg
+              class="arrow"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </div>
+        </a>
+
+        <!-- 10. TreeMap Card -->
+        <a
+          href="TreeMap/index.html"
+          target="_blank"
+          class="collection-card card-treemap"
+          id="card-treemap"
+        >
+          <div class="card-icon card-icon-treemap">
+            <svg
+              width="26"
+              height="26"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <circle cx="12" cy="5" r="3" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <circle cx="6" cy="16" r="3" />
+              <circle cx="18" cy="16" r="3" />
+              <line x1="12" y1="12" x2="6" y2="13" />
+              <line x1="12" y1="12" x2="18" y2="13" />
+            </svg>
+          </div>
+          <div>
+            <div class="card-title">TreeMap</div>
+            <div class="card-subtitle">Red-Black Tree — Sorted Key-Value Map</div>
+          </div>
+          <p class="card-desc">
+            Watch Red-Black Tree balancing with key-value pairs. Each node
+            displays both key and value. Explore NavigableMap operations:
+            <code>firstKey</code>, <code>lastKey</code>,
+            <code>floorKey</code>, <code>ceilingKey</code>.
+          </p>
+          <div class="card-tags">
+            <span class="card-tag">put(k,v)</span>
+            <span class="card-tag">get(k)</span>
+            <span class="card-tag">remove(k)</span>
+            <span class="card-tag">firstKey()</span>
+            <span class="card-tag">floorKey()</span>
+            <span class="card-tag">O(log n)</span>
           </div>
           <div class="card-cta">
             Open Visualizer

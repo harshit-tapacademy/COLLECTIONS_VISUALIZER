@@ -5,7 +5,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='j' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f89820'/%3E%3Cstop offset='1' stop-color='%23e25303'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M24 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M32 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M12 30h34v8c0 14-34 14-34 0z' fill='url(%23j)'/%3E%3Cpath d='M46 33h6c6 0 6 10 0 10h-6' fill='none' stroke='url(%23j)' stroke-width='3'/%3E%3Cpath d='M8 52h48' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M14 56h36' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>HashSet Visualizer — Hash Table with Bucket Array</title>
-    <meta name="description" content="Interactive hash table visualizer for Java HashSet. See bucket arrays, hash computation, load factor threshold, and rehashing at 75% capacity.">
+    <meta name="description" content="Interactive hash table visualizer for Java HashSet. See bucket arrays, hash computation, load factor threshold, rehashing, separate chaining collisions, and Java 8+ treeification.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
 :root{
@@ -19,6 +19,7 @@
     --accent-purple:#b388ff;--accent-purple-bg:rgba(179,136,255,0.08);
     --accent-cyan:#18ffff;--accent-cyan-bg:rgba(24,255,255,0.08);
     --accent-teal:#64ffda;--accent-orange:#ff9100;
+    --rbt-red:#e53935;--rbt-black:#333;
     --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--radius-full:999px;
     --shadow-md:0 4px 16px rgba(0,0,0,0.6);
     --font:'Inter',-apple-system,sans-serif;--font-mono:'JetBrains Mono','Fira Code',monospace;
@@ -28,7 +29,6 @@
 body{font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
 .app{max-width:1440px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
 
-/* Header */
 .header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);flex-wrap:wrap;gap:16px;backdrop-filter:blur(20px)}
 .header-left{display:flex;align-items:center;gap:16px}
 .logo-icon{width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--accent-orange),var(--accent-amber));display:flex;align-items:center;justify-content:center;color:#000;box-shadow:0 0 24px rgba(255,145,0,0.3);transition:transform var(--transition)}
@@ -41,7 +41,6 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .formula-label{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.58rem;letter-spacing:0.1em}
 .formula-badge code{font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:0.72rem}
 
-/* Controls */
 .controls-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);gap:14px;flex-wrap:wrap;backdrop-filter:blur(20px)}
 .controls-left,.controls-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .input-group{display:flex;align-items:center;gap:0}
@@ -76,7 +75,20 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .speed-control input[type="range"]{width:64px;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.08);border-radius:2px;outline:none}
 .speed-control input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent-blue);cursor:pointer;box-shadow:0 0 8px rgba(68,138,255,0.4)}
 
-/* Panels */
+/* Collision Toggle */
+.collision-toggle{display:flex;align-items:center;gap:10px;padding:10px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);backdrop-filter:blur(20px);flex-wrap:wrap}
+.collision-toggle .toggle-label{font-size:0.78rem;font-weight:600;color:var(--text-secondary);display:flex;align-items:center;gap:8px}
+.collision-toggle .toggle-label .tag{font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:var(--radius-full);text-transform:uppercase;letter-spacing:0.08em}
+.tag-new{background:rgba(76,255,145,0.1);color:var(--accent-green);border:1px solid rgba(76,255,145,0.2)}
+.toggle-switch{position:relative;width:44px;height:24px;cursor:pointer}
+.toggle-switch input{display:none}
+.toggle-track{position:absolute;inset:0;background:rgba(255,255,255,0.08);border-radius:12px;transition:background 0.3s ease;border:1px solid var(--border)}
+.toggle-switch input:checked+.toggle-track{background:var(--accent-orange);border-color:rgba(255,145,0,0.3)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform 0.3s ease;box-shadow:0 1px 4px rgba(0,0,0,0.3)}
+.toggle-switch input:checked~.toggle-thumb{transform:translateX(20px)}
+.collision-info{font-size:0.68rem;color:var(--text-muted);line-height:1.5;flex:1;min-width:200px}
+.collision-info strong{color:var(--accent-orange)}
+
 .panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
 .panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-subtle);background:rgba(255,255,255,0.01);flex-wrap:wrap;gap:8px}
 .panel-header h2{font-size:0.82rem;font-weight:700;color:var(--text-secondary)}
@@ -86,7 +98,6 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .badge-amber{background:var(--accent-amber-bg);color:var(--accent-amber);border-color:rgba(255,193,7,0.15)}
 .badge-orange{background:rgba(255,145,0,0.08);color:var(--accent-orange);border-color:rgba(255,145,0,0.15)}
 
-/* Load Factor Bar */
 .lf-bar-wrap{margin:0 20px 16px;display:flex;flex-direction:column;gap:6px}
 .lf-info{display:flex;justify-content:space-between;font-size:0.68rem;font-weight:600;color:var(--text-muted)}
 .lf-info strong{color:var(--text-secondary)}
@@ -96,13 +107,11 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .lf-fill.critical{background:linear-gradient(90deg,var(--accent-red),#ff1744)}
 .lf-threshold{position:absolute;top:-1px;bottom:-1px;width:2px;background:var(--accent-amber);border-radius:1px;opacity:0.7}
 
-/* Hash Computation Display */
 .hash-display{padding:12px 20px;font-family:var(--font-mono);font-size:0.75rem;color:var(--text-secondary);border-top:1px solid var(--border-subtle);min-height:40px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .hash-display .hl{color:var(--accent-cyan);font-weight:700}
 .hash-display .op{color:var(--text-muted)}
 .hash-display .result{color:var(--accent-green);font-weight:700}
 
-/* Bucket Table */
 .bucket-viewport{padding:20px;overflow-x:auto}
 .bucket-grid{display:flex;gap:6px;min-width:fit-content;align-items:flex-start}
 .bucket-col{display:flex;flex-direction:column;align-items:center;gap:0;min-width:72px}
@@ -112,8 +121,8 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .bucket-slot.hl-target{border-color:rgba(76,255,145,0.5);background:rgba(76,255,145,0.04);box-shadow:0 0 12px rgba(76,255,145,0.15)}
 .bucket-slot.hl-search{border-color:rgba(255,193,7,0.5);background:rgba(255,193,7,0.04);box-shadow:0 0 12px rgba(255,193,7,0.15)}
 .bucket-slot.hl-remove{border-color:rgba(255,82,82,0.5);background:rgba(255,82,82,0.04)}
+.bucket-slot.treeified{border-color:rgba(229,57,53,0.4);background:rgba(229,57,53,0.04);box-shadow:0 0 12px rgba(229,57,53,0.1)}
 
-/* Chain nodes */
 .chain-node{width:100%;padding:8px 4px;text-align:center;font-family:var(--font-mono);font-size:0.8rem;font-weight:700;color:var(--text-primary);border-bottom:1px solid rgba(255,255,255,0.04);transition:all 0.3s ease;position:relative}
 .chain-node:last-child{border-bottom:none}
 .chain-node.hl-add{background:rgba(76,255,145,0.12);color:var(--accent-green);animation:nodeFlash .5s ease}
@@ -123,23 +132,38 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .chain-arrow{width:100%;display:flex;justify-content:center;padding:0;line-height:1;font-size:0.5rem;color:var(--text-muted);opacity:0.4}
 @keyframes nodeFlash{0%{transform:scale(0.8);opacity:0}50%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
 
-/* Rehash overlay */
+/* Chain count badge */
+.chain-count{font-size:0.52rem;font-weight:700;color:var(--text-muted);padding:2px 6px;border-radius:4px;background:rgba(255,255,255,0.04);margin-top:2px;font-family:var(--font-mono);display:inline-block}
+.chain-count.warn{color:var(--accent-amber);background:var(--accent-amber-bg)}
+.chain-count.tree{color:var(--rbt-red);background:rgba(229,57,53,0.1)}
+
+/* Tree indicator */
+.tree-badge{display:flex;align-items:center;gap:4px;justify-content:center;padding:4px 6px;font-size:0.5rem;font-weight:700;color:var(--rbt-red);background:rgba(229,57,53,0.08);border-top:1px solid rgba(229,57,53,0.15);font-family:var(--font-mono);letter-spacing:0.03em}
+.tree-badge .rb-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.rb-dot.red{background:var(--rbt-red);box-shadow:0 0 6px rgba(229,57,53,0.4)}
+.rb-dot.black{background:var(--rbt-black);border:1px solid rgba(255,255,255,0.15)}
+
+/* Treeification alert */
+.tree-alert{display:flex;align-items:center;gap:10px;padding:10px 20px;background:rgba(229,57,53,0.04);border:1px solid rgba(229,57,53,0.2);border-radius:var(--radius-md);font-size:0.78rem;color:var(--text-secondary);transition:all 0.3s ease;backdrop-filter:blur(20px)}
+.tree-alert.hidden{display:none}
+.tree-alert strong{color:var(--rbt-red)}
+.tree-alert code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+
 .rehash-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity 0.3s ease}
 .rehash-overlay.active{opacity:1;pointer-events:auto}
 .rehash-msg{padding:28px 40px;background:var(--bg-panel);border:1px solid rgba(255,145,0,0.3);border-radius:var(--radius-xl);text-align:center;box-shadow:0 0 40px rgba(255,145,0,0.15)}
 .rehash-msg h3{font-size:1.1rem;font-weight:800;color:var(--accent-orange);margin-bottom:8px}
 .rehash-msg p{font-size:0.82rem;color:var(--text-secondary)}
 
-/* Info Bar */
 .info-bar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-secondary);min-height:48px;transition:all 0.3s ease;backdrop-filter:blur(20px)}
 .info-bar.action-add{border-color:rgba(76,255,145,0.2);background:rgba(76,255,145,0.03)}
 .info-bar.action-remove{border-color:rgba(255,82,82,0.2);background:rgba(255,82,82,0.03)}
 .info-bar.action-search{border-color:rgba(255,193,7,0.2);background:rgba(255,193,7,0.03)}
 .info-bar.action-rehash{border-color:rgba(255,145,0,0.2);background:rgba(255,145,0,0.03)}
+.info-bar.action-tree{border-color:rgba(229,57,53,0.2);background:rgba(229,57,53,0.03)}
 .info-text{font-weight:500;line-height:1.5}
 .info-text strong{color:var(--text-primary);font-weight:700}
 
-/* Log */
 .log-panel{max-height:220px}
 .log-container{padding:10px 16px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
 .log-container::-webkit-scrollbar{width:3px}
@@ -150,9 +174,10 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .log-entry.log-remove{color:var(--accent-red);background:var(--accent-red-bg)}
 .log-entry.log-search{color:var(--accent-amber);background:var(--accent-amber-bg)}
 .log-entry.log-rehash{color:var(--accent-orange);background:rgba(255,145,0,0.08)}
+.log-entry.log-tree{color:var(--rbt-red);background:rgba(229,57,53,0.08)}
 .log-entry.log-info{color:var(--text-muted)}
 
-/* ===== Theory Section ===== */
+/* Theory Section */
 .theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
 .theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
 .theory-toggle:hover{background:rgba(255,255,255,0.02)}
@@ -161,7 +186,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
 .theory-section.open .toggle-chevron{transform:rotate(180deg)}
 .theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
-.theory-section.open .theory-body{max-height:3500px}
+.theory-section.open .theory-body{max-height:4500px}
 .theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
 .theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
@@ -204,7 +229,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
             </div>
             <div>
                 <h1>HashSet Visualizer</h1>
-                <p class="subtitle">Java Collections — Hash Table with Open Addressing</p>
+                <p class="subtitle">Java Collections — Hash Table with Separate Chaining</p>
             </div>
         </div>
         <div class="header-right">
@@ -236,6 +261,26 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
         </div>
     </div>
 
+    <!-- Collision Demo Toggle -->
+    <div class="collision-toggle" id="collisionToggleBar">
+        <span class="toggle-label">
+            ⚡ Collision Demo Mode <span class="tag tag-new">NEW</span>
+        </span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="collisionSwitch">
+            <span class="toggle-track"></span>
+            <span class="toggle-thumb"></span>
+        </label>
+        <span class="collision-info" id="collisionInfo">
+            OFF — Normal mode. Each element goes to its own bucket. Toggle ON to see <strong>bucket collisions</strong>, separate chaining, and <strong>Java 8+ treeification</strong> (>8 nodes → Red-Black Tree).
+        </span>
+    </div>
+
+    <!-- Treeification Alert -->
+    <div class="tree-alert hidden" id="treeAlert">
+        🌲 <strong>Treeification!</strong> A bucket chain exceeded <code>TREEIFY_THRESHOLD = 8</code> nodes. Java converts the linked list into a <strong style="color:var(--rbt-red)">Red-Black Tree</strong> for O(log n) lookups instead of O(n). Untreeifies back to list when ≤ <code>6</code> nodes.
+    </div>
+
     <!-- Theory Section -->
     <div class="theory-section" id="theorySection">
         <button class="theory-toggle" id="theoryToggle" type="button">
@@ -254,76 +299,47 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
                             <li>Provides <code>O(1)</code> average time complexity for access, insert, and delete!</li>
                         </ul>
                     </div>
-
                     <div class="theory-card">
-                        <h3><span class="icon" style="background:var(--accent-red-bg);color:var(--accent-red)">⚡</span> One Value Per Bucket</h3>
-                        <p style="margin-bottom:10px">In this visualization, <strong>every element gets its own unique bucket slot</strong>. When two keys compute to the same index:</p>
+                        <h3><span class="icon" style="background:var(--accent-red-bg);color:var(--accent-red)">⚡</span> Collision & Separate Chaining</h3>
+                        <p style="margin-bottom:10px">When two elements hash to the <strong>same bucket</strong>:</p>
                         <ul>
-                            <li>The hash function points to a starting slot</li>
-                            <li>If that slot is taken, the next empty slot is used — so <strong>no slot ever holds more than one value</strong></li>
-                            <li>Keeps the visualization clean: the bucket array is always a flat map of index → value</li>
+                            <li><strong>Separate Chaining:</strong> Multiple elements are stored in a linked list within the same bucket</li>
+                            <li>Each node has a <code>next</code> pointer → forms a chain</li>
+                            <li><strong>Java 8+ Treeification:</strong> When a chain exceeds <code>8</code> nodes, it converts to a <strong style="color:var(--rbt-red)">Red-Black Tree</strong></li>
+                            <li>When elements are removed and chain drops ≤ <code>6</code>, it <strong>untreeifies</strong> back to a linked list</li>
                         </ul>
                     </div>
-
                     <div class="theory-card">
                         <h3><span class="icon" style="background:var(--accent-blue-bg);color:var(--accent-blue)">📈</span> Load Factor & Rehashing</h3>
-                        <p style="margin-bottom:10px">As the set fills up, collisions become too frequent, slowing down performance. <code>Load Factor = size / capacity</code>.</p>
+                        <p style="margin-bottom:10px">As the set fills up, collisions become too frequent. <code>Load Factor = size / capacity</code>.</p>
                         <ul>
                             <li><strong>Default Load Factor Threshold:</strong> <code>0.75</code> (75% full)</li>
-                            <li><strong>Rehashing:</strong> When threshold is exceeded, Java creates a new array <strong>2x the size</strong>.</li>
-                            <li>All elements are re-hashed and moved to the new array, keeping chains short and restoring O(1) performance.</li>
+                            <li><strong>Rehashing:</strong> When threshold is exceeded, Java creates a new array <strong>2x the size</strong></li>
+                            <li>All elements are re-hashed and moved, keeping chains short and restoring O(1) performance</li>
                         </ul>
                     </div>
-
                     <div class="theory-card">
                         <h3><span class="icon" style="background:rgba(255,145,0,0.1);color:#ff9100">☕</span> Java HashSet Caveats</h3>
                         <ul>
-                            <li>Backed internally by a <code>HashMap</code> (the elements are keys, values are dummy objects)</li>
-                            <li><strong>Unordered:</strong> Iteration order is unpredictable and will completely change after a rehash!</li>
+                            <li>Backed internally by a <code>HashMap</code> (elements are keys, values are dummy <code>PRESENT</code> objects)</li>
+                            <li><strong>Unordered:</strong> Iteration order is unpredictable and changes after rehash</li>
                             <li>Accepts exactly one <code>null</code> element</li>
-                            <li>Not thread-safe (Use <code>ConcurrentHashMap.newKeySet()</code> for concurrent access)</li>
+                            <li>Not thread-safe — use <code>ConcurrentHashMap.newKeySet()</code></li>
+                            <li><strong>Must override</strong> <code>hashCode()</code> and <code>equals()</code> properly</li>
                         </ul>
                     </div>
-
                     <div class="theory-card theory-full">
                         <h3><span class="icon" style="background:rgba(255,255,255,0.05);color:var(--text-primary)">⚙️</span> Common Methods & Time Complexity</h3>
                         <table class="complexity-table">
-                            <thead>
-                                <tr>
-                                    <th>Method</th>
-                                    <th>Description</th>
-                                    <th>Origin</th>
-                                    <th>Time Comp.</th>
-                                </tr>
-                            </thead>
+                            <thead><tr><th>Method</th><th>Description</th><th>Avg Time</th><th>Worst (pre Java 8)</th><th>Worst (Java 8+)</th></tr></thead>
                             <tbody>
-                                <tr>
-                                    <td><code>boolean add(E e)</code></td>
-                                    <td>Adds the specified element to this set if it is not already present.</td>
-                                    <td>Collection</td>
-                                    <td><span class="good">O(1)</span>*</td>
-                                </tr>
-                                <tr>
-                                    <td><code>boolean remove(Object o)</code></td>
-                                    <td>Removes the specified element from this set if it is present.</td>
-                                    <td>Collection</td>
-                                    <td><span class="good">O(1)</span>*</td>
-                                </tr>
-                                <tr>
-                                    <td><code>boolean contains(Object o)</code></td>
-                                    <td>Returns true if this set contains the specified element.</td>
-                                    <td>Collection</td>
-                                    <td><span class="good">O(1)</span>*</td>
-                                </tr>
-                                <tr>
-                                    <td><code>int size()</code></td>
-                                    <td>Returns the number of elements in this set (its cardinality).</td>
-                                    <td>Collection</td>
-                                    <td><span class="good">O(1)</span></td>
-                                </tr>
+                                <tr><td><code>boolean add(E e)</code></td><td>Adds element if not present</td><td class="good">O(1)</td><td class="bad">O(n)</td><td class="warn">O(log n)*</td></tr>
+                                <tr><td><code>boolean remove(Object o)</code></td><td>Removes element if present</td><td class="good">O(1)</td><td class="bad">O(n)</td><td class="warn">O(log n)*</td></tr>
+                                <tr><td><code>boolean contains(Object o)</code></td><td>Checks if element exists</td><td class="good">O(1)</td><td class="bad">O(n)</td><td class="warn">O(log n)*</td></tr>
+                                <tr><td><code>int size()</code></td><td>Returns number of elements</td><td class="good">O(1)</td><td class="good">O(1)</td><td class="good">O(1)</td></tr>
                             </tbody>
                         </table>
-                        <p style="margin-top:10px;font-size:0.65rem;color:var(--text-muted)">* Average case. Worst case is O(n) if all elements hash to the same bucket (or probe chain), though Java 8+ mitigates this using balanced trees for large chains.</p>
+                        <p style="margin-top:10px;font-size:0.65rem;color:var(--text-muted)">* Java 8+ converts chains >8 to Red-Black Trees, improving worst case from O(n) to O(log n). Toggle "Collision Demo Mode" above to see this in action!</p>
                     </div>
                 </div>
             </div>
@@ -333,7 +349,7 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
     <!-- Bucket Table Panel -->
     <div class="panel">
         <div class="panel-header">
-            <h2>#️⃣ Bucket Array (Hash Table)</h2>
+            <h2 id="bucketTitle">#️⃣ Bucket Array (Hash Table)</h2>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <span class="badge badge-orange" id="capLabel">capacity: 16</span>
                 <span class="badge badge-blue" id="sizeLabel">size: 0</span>
@@ -385,105 +401,127 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 </div>
 
 <script>
-/* ===== SimHashSet — open addressing with linear probing (one value per bucket) ===== */
+const TREEIFY_THRESHOLD = 8;
+const UNTREEIFY_THRESHOLD = 6;
+
+/* ===== SimHashSet — separate chaining with treeification ===== */
 class SimHashSet {
-    constructor() {
+    constructor(collisionMode = false) {
         this.capacity = 16;
         this.loadFactor = 0.75;
-        this.buckets = new Array(this.capacity).fill(null);
+        this.buckets = new Array(this.capacity).fill(null).map(() => ({ type: 'list', items: [] }));
         this._size = 0;
+        this.collisionMode = collisionMode;
     }
-
     get size() { return this._size; }
     get threshold() { return Math.floor(this.capacity * this.loadFactor); }
     get currentLoadFactor() { return this._size / this.capacity; }
 
     _hash(val) {
-        // Simplified spread hash like Java's HashMap
+        if (this.collisionMode) {
+            // In collision mode, force collisions by using modulo small number
+            // Elements that differ by 16 go to the same bucket
+            return val | 0;
+        }
         let h = val | 0;
         h = h ^ (h >>> 16);
         return h;
     }
 
-    _initialIdx(val) {
-        return this._hash(val) & (this.capacity - 1);
-    }
-
-    // Linear probing: find either the value or the first empty slot
-    _findSlot(val) {
-        const n = this.capacity;
-        const start = this._initialIdx(val);
-        for (let step = 0; step < n; step++) {
-            const i = (start + step) & (n - 1);
-            if (this.buckets[i] === null) return { foundIdx: -1, emptyIdx: i };
-            if (this.buckets[i] === val) return { foundIdx: i, emptyIdx: -1 };
-        }
-        return { foundIdx: -1, emptyIdx: -1 };
+    _bucketIdx(val) {
+        return (this._hash(val) & (this.capacity - 1));
     }
 
     add(val) {
-        const r = this._findSlot(val);
-        if (r.foundIdx !== -1) return { added: false, placedIdx: r.foundIdx, rehashed: false };
-        const placedIdx = r.emptyIdx;
-        this.buckets[placedIdx] = val;
+        const idx = this._bucketIdx(val);
+        const bucket = this.buckets[idx];
+        // Check for duplicate
+        if (bucket.items.includes(val)) {
+            return { added: false, idx, duplicate: true, rehashed: false, treeified: false };
+        }
+        bucket.items.push(val);
         this._size++;
+
+        // Check treeification
+        let treeified = false;
+        if (bucket.items.length > TREEIFY_THRESHOLD && bucket.type === 'list') {
+            bucket.type = 'tree';
+            bucket.items.sort((a, b) => a - b);
+            treeified = true;
+        }
+
+        // Check rehash
         if (this._size > this.threshold) {
             const oldCap = this.capacity;
             this._rehash();
-            const newPlacedIdx = this.buckets.indexOf(val);
-            return { added: true, placedIdx, rehashed: true, oldCap, newCap: this.capacity, newPlacedIdx };
+            const newIdx = this._bucketIdx(val);
+            return { added: true, idx, newIdx, rehashed: true, oldCap, newCap: this.capacity, treeified };
         }
-        return { added: true, placedIdx, rehashed: false };
+        return { added: true, idx, rehashed: false, treeified, chainLen: bucket.items.length };
     }
 
     remove(val) {
-        const r = this._findSlot(val);
-        if (r.foundIdx === -1) return { removed: false };
-        const removedIdx = r.foundIdx;
-        this.buckets[removedIdx] = null;
+        const idx = this._bucketIdx(val);
+        const bucket = this.buckets[idx];
+        const pos = bucket.items.indexOf(val);
+        if (pos === -1) return { removed: false, idx };
+        bucket.items.splice(pos, 1);
         this._size--;
-        // Fix probe chain: re-insert any subsequent elements until we hit an empty slot
-        const n = this.capacity;
-        let i = (removedIdx + 1) & (n - 1);
-        while (this.buckets[i] !== null) {
-            const moved = this.buckets[i];
-            this.buckets[i] = null;
-            this._size--;
-            const rr = this._findSlot(moved);
-            this.buckets[rr.emptyIdx] = moved;
-            this._size++;
-            i = (i + 1) & (n - 1);
+        // Check untreeification
+        let untreeified = false;
+        if (bucket.type === 'tree' && bucket.items.length <= UNTREEIFY_THRESHOLD) {
+            bucket.type = 'list';
+            untreeified = true;
         }
-        return { removed: true, placedIdx: removedIdx };
+        return { removed: true, idx, untreeified };
     }
 
     contains(val) {
-        const r = this._findSlot(val);
-        return { found: r.foundIdx !== -1, placedIdx: r.foundIdx };
+        const idx = this._bucketIdx(val);
+        const bucket = this.buckets[idx];
+        const found = bucket.items.includes(val);
+        return { found, idx, chainLen: bucket.items.length, bucketType: bucket.type };
     }
 
     _rehash() {
         const old = this.buckets;
         this.capacity *= 2;
-        this.buckets = new Array(this.capacity).fill(null);
+        this.buckets = new Array(this.capacity).fill(null).map(() => ({ type: 'list', items: [] }));
         this._size = 0;
-        for (const v of old) {
-            if (v !== null) {
-                const r = this._findSlot(v);
-                this.buckets[r.emptyIdx] = v;
+        for (const bucket of old) {
+            for (const val of bucket.items) {
+                const idx = this._bucketIdx(val);
+                this.buckets[idx].items.push(val);
                 this._size++;
+            }
+        }
+        // Re-check treeification for new buckets
+        for (const bucket of this.buckets) {
+            if (bucket.items.length > TREEIFY_THRESHOLD) {
+                bucket.type = 'tree';
+                bucket.items.sort((a, b) => a - b);
             }
         }
     }
 
     clear() {
         this.capacity = 16;
-        this.buckets = new Array(this.capacity).fill(null);
+        this.buckets = new Array(this.capacity).fill(null).map(() => ({ type: 'list', items: [] }));
         this._size = 0;
     }
 
     allElements() {
-        return this.buckets.filter(v => v !== null);
+        const elems = [];
+        for (const b of this.buckets) for (const v of b.items) elems.push(v);
+        return elems;
+    }
+
+    maxChainLen() {
+        return Math.max(0, ...this.buckets.map(b => b.items.length));
+    }
+
+    hasTreeBucket() {
+        return this.buckets.some(b => b.type === 'tree');
     }
 }
 
@@ -499,10 +537,13 @@ class SimHashSet {
     const capLabel=$('capLabel'),sizeLabel=$('sizeLabel'),lfLabel=$('lfLabel');
     const lfValue=$('lfValue'),threshValue=$('threshValue'),lfFill=$('lfFill'),lfThresh=$('lfThresh');
     const rehashOverlay=$('rehashOverlay'),rehashText=$('rehashText');
+    const collisionSwitch=$('collisionSwitch'),collisionInfo=$('collisionInfo');
+    const treeAlert=$('treeAlert');
     const allBtns=[addBtn,removeBtn,containsBtn,clearBtn,sampleBtn];
 
-    let hs = new SimHashSet();
+    let hs = new SimHashSet(false);
     let animating = false;
+    let collisionMode = false;
 
     function getDelay(){const s=[1200,800,550,350,200];return s[parseInt(speedSlider.value)-1]||550}
     function setAnimating(v){animating=v;allBtns.forEach(b=>b.disabled=v);updateBtns()}
@@ -522,29 +563,48 @@ class SimHashSet {
         lfFill.style.width = pct + '%';
         lfFill.className = 'lf-fill' + (lf > 0.9 ? ' critical' : lf > 0.6 ? ' warn' : '');
         lfThresh.style.left = (hs.loadFactor * 100) + '%';
+        // Tree alert
+        if (hs.hasTreeBucket()) treeAlert.classList.remove('hidden');
+        else treeAlert.classList.add('hidden');
     }
 
-    function showHash(val, placedIdx) {
+    function showHash(val, idx) {
         const h = hs._hash(val);
-        hashDisplay.innerHTML = `<span class="hl">${val}</span> <span class="op">→ hash =</span> <span class="hl">${h}</span> <span class="op">→</span> <span class="result">bucket[${placedIdx}]</span>`;
+        hashDisplay.innerHTML = `<span class="hl">${val}</span> <span class="op">→ hash =</span> <span class="hl">${h}</span> <span class="op">→</span> <span class="result">bucket[${idx}]</span>`;
     }
 
-    /* ===== Render Buckets (one value per slot) ===== */
-    function renderBuckets(hlBucket = -1, hlType = '') {
+    /* ===== Render Buckets — supports chaining & tree ===== */
+    function renderBuckets(hlBucket = -1, hlType = '', hlVal = null) {
         let html = '';
         for (let i = 0; i < hs.capacity; i++) {
-            const val = hs.buckets[i];
+            const bucket = hs.buckets[i];
+            const chain = bucket.items;
             const isHl = i === hlBucket;
-            const isEmpty = val === null;
+            const isEmpty = chain.length === 0;
+            const isTree = bucket.type === 'tree';
             let slotCls = isEmpty ? 'empty' : '';
             if (isHl) slotCls += ` hl-${hlType}`;
+            if (isTree) slotCls += ' treeified';
             html += `<div class="bucket-col"><div class="bucket-idx">[${i}]</div><div class="bucket-slot ${slotCls}">`;
             if (isEmpty) {
                 html += `<div class="chain-node" style="color:var(--text-muted);opacity:0.3;font-size:0.6rem">—</div>`;
             } else {
-                let nodeCls = '';
-                if (isHl) nodeCls = `hl-${hlType === 'target' ? 'add' : hlType === 'search' ? 'found' : 'remove'}`;
-                html += `<div class="chain-node ${nodeCls}">${val}</div>`;
+                for (let j = 0; j < chain.length; j++) {
+                    const v = chain[j];
+                    let nodeCls = '';
+                    if (isHl && v === hlVal) nodeCls = `hl-${hlType === 'target' ? 'add' : hlType === 'search' ? 'found' : 'remove'}`;
+                    if (j > 0) html += '<div class="chain-arrow">↓</div>';
+                    html += `<div class="chain-node ${nodeCls}">${v}</div>`;
+                }
+                // Show chain length badge for chains > 1
+                if (chain.length > 1) {
+                    const countCls = isTree ? 'tree' : chain.length >= 7 ? 'warn' : '';
+                    html += `<div class="chain-count ${countCls}">${chain.length} nodes</div>`;
+                }
+                // Tree badge
+                if (isTree) {
+                    html += `<div class="tree-badge"><span class="rb-dot red"></span><span class="rb-dot black"></span> RBT</div>`;
+                }
             }
             html += '</div></div>';
         }
@@ -559,35 +619,40 @@ class SimHashSet {
         const v=getVal();if(v===null)return;
         setAnimating(true);
         const d=getDelay();
+        const result = hs.add(v);
+        const idx = result.rehashed ? result.newIdx : result.idx;
+        showHash(v, result.rehashed ? hs._bucketIdx(v) : result.idx);
 
-        // Check duplicate first
-        const probe = hs.contains(v);
-        if (probe.found) {
-            showHash(v, probe.placedIdx);
-            renderBuckets(probe.placedIdx, 'search');
-            setInfo(`⚠️ <strong>${v}</strong> already exists at bucket[${probe.placedIdx}]. Set does not allow duplicates.`, 'search');
+        if (result.duplicate) {
+            renderBuckets(result.idx, 'search', v);
+            setInfo(`⚠️ <strong>${v}</strong> already exists at bucket[${result.idx}]. Set rejects duplicates.`, 'search');
             logMsg(`add(${v}) → false (duplicate)`, 'search');
             await sleep(d);
             renderBuckets(); setAnimating(false); return;
         }
 
-        const result = hs.add(v);
-        const idx = result.rehashed ? result.newPlacedIdx : result.placedIdx;
-        showHash(v, idx);
-
         if (result.rehashed) {
             rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}. Redistributing ${hs.size} elements.`;
             rehashOverlay.classList.add('active');
             logMsg(`Rehash! capacity ${result.oldCap} → ${result.newCap}`, 'rehash');
-            setInfo(`🔄 <strong>Rehash triggered!</strong> Size ${hs.size} exceeded threshold ${Math.floor(result.oldCap * 0.75)} (75%). Capacity: ${result.oldCap} → <strong>${result.newCap}</strong>`, 'rehash');
+            setInfo(`🔄 <strong>Rehash triggered!</strong> Size ${hs.size} exceeded threshold. Capacity: ${result.oldCap} → <strong>${result.newCap}</strong>`, 'rehash');
             await sleep(d * 2);
             rehashOverlay.classList.remove('active');
-            showHash(v, idx);
+            const newIdx = hs._bucketIdx(v);
+            showHash(v, newIdx);
+            renderBuckets(newIdx, 'target', v);
+        } else {
+            renderBuckets(result.idx, 'target', v);
         }
 
-        renderBuckets(idx, 'target');
-        setInfo(`✅ <strong>add(${v})</strong> → bucket[<strong>${idx}</strong>]. Size: <strong>${hs.size}</strong>`, 'add');
-        logMsg(`add(${v}) → true. bucket[${idx}]. size=${hs.size}`, 'add');
+        if (result.treeified) {
+            logMsg(`🌲 Treeified! bucket[${result.idx}] chain > ${TREEIFY_THRESHOLD} → Red-Black Tree`, 'tree');
+            setInfo(`🌲 <strong>Treeified!</strong> bucket[<strong>${result.idx}</strong>] now has > ${TREEIFY_THRESHOLD} elements. Converted to <strong style="color:var(--rbt-red)">Red-Black Tree</strong> for O(log n) lookup!`, 'tree');
+        } else {
+            const chainInfo = result.chainLen > 1 ? ` Chain length: <strong>${result.chainLen}</strong>` : '';
+            setInfo(`✅ <strong>add(${v})</strong> → bucket[<strong>${result.rehashed ? hs._bucketIdx(v) : result.idx}</strong>]. Size: <strong>${hs.size}</strong>${chainInfo}`, 'add');
+        }
+        logMsg(`add(${v}) → true. bucket[${result.rehashed ? hs._bucketIdx(v) : result.idx}]. size=${hs.size}`, 'add');
         await sleep(d);
         renderBuckets(); valueInput.value=''; valueInput.focus(); setAnimating(false);
     }
@@ -597,23 +662,22 @@ class SimHashSet {
         setAnimating(true);
         const d=getDelay();
         const probe = hs.contains(v);
-
         if (!probe.found) {
             setInfo(`⚠️ <strong>${v}</strong> not found in set.`, 'search');
             logMsg(`remove(${v}) → false`, 'search');
             await sleep(d);
             renderBuckets(); setAnimating(false); return;
         }
-
-        const foundIdx = probe.placedIdx;
-        showHash(v, foundIdx);
-        renderBuckets(foundIdx, 'remove');
-        setInfo(`🗑️ Found <strong>${v}</strong> at bucket[${foundIdx}]. Removing...`, 'remove');
+        showHash(v, probe.idx);
+        renderBuckets(probe.idx, 'remove', v);
+        setInfo(`🗑️ Found <strong>${v}</strong> at bucket[${probe.idx}]. Removing...`, 'remove');
         await sleep(d);
-
-        hs.remove(v);
+        const r = hs.remove(v);
+        if (r.untreeified) {
+            logMsg(`Untreeified! bucket[${r.idx}] chain ≤ ${UNTREEIFY_THRESHOLD} → back to Linked List`, 'tree');
+        }
         logMsg(`remove(${v}) → true. size=${hs.size}`, 'remove');
-        setInfo(`🗑️ <strong>remove(${v})</strong> — cleared bucket[${foundIdx}]. Size: <strong>${hs.size}</strong>`, 'remove');
+        setInfo(`🗑️ <strong>remove(${v})</strong> — removed from bucket[${r.idx}]. Size: <strong>${hs.size}</strong>${r.untreeified ? ' (untreeified back to linked list!)' : ''}`, 'remove');
         await sleep(d * 0.5);
         renderBuckets(); valueInput.value=''; valueInput.focus(); setAnimating(false);
     }
@@ -623,11 +687,11 @@ class SimHashSet {
         setAnimating(true);
         const d=getDelay();
         const probe = hs.contains(v);
-
         if (probe.found) {
-            showHash(v, probe.placedIdx);
-            renderBuckets(probe.placedIdx, 'search');
-            setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>. Found at bucket[${probe.placedIdx}].`, 'search');
+            showHash(v, probe.idx);
+            renderBuckets(probe.idx, 'search', v);
+            const lookupType = probe.bucketType === 'tree' ? ' (RBT binary search: O(log n))' : probe.chainLen > 1 ? ` (chain traversal: ${probe.chainLen} nodes)` : '';
+            setInfo(`✅ <strong>contains(${v})</strong> → <strong>true</strong>. Found at bucket[${probe.idx}].${lookupType}`, 'search');
             logMsg(`contains(${v}) → true`, 'search');
         } else {
             hashDisplay.innerHTML = `<span class="hl">${v}</span> <span class="op">→ not in set</span>`;
@@ -639,7 +703,7 @@ class SimHashSet {
     }
 
     function handleClear(){
-        hs.clear();
+        hs = new SimHashSet(collisionMode);
         hashDisplay.innerHTML = '<span class="op">Ready — hash computation will appear here</span>';
         logMsg('clear()', 'info');
         setInfo('🧹 HashSet cleared. Capacity reset to 16.', '');
@@ -647,32 +711,101 @@ class SimHashSet {
     }
 
     async function handleSample(){
-        hs.clear(); renderBuckets();
+        hs = new SimHashSet(collisionMode);
+        renderBuckets();
         setAnimating(true);
-        const vals = [5, 21, 37, 12, 8, 28, 15, 42, 3, 19, 50, 71, 4];
-        logMsg(`Loading: add(${vals.join(', ')})`, 'info');
         const d = getDelay();
-        for (const v of vals) {
-            const result = hs.add(v);
-            const idx = result.rehashed ? result.newPlacedIdx : result.placedIdx;
-            showHash(v, idx);
-            if (result.rehashed) {
-                rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}`;
-                rehashOverlay.classList.add('active');
-                logMsg(`Rehash! ${result.oldCap} → ${result.newCap}`, 'rehash');
-                await sleep(d);
-                rehashOverlay.classList.remove('active');
-                showHash(v, idx);
-            }
-            renderBuckets(idx, 'target');
-            logMsg(`add(${v}) → bucket[${idx}]`, 'add');
-            await sleep(d * 0.4);
+
+        if (collisionMode) {
+            // Collision demo: Use capacity 64 so threshold=48, plenty of room
+            // Values: multiples of 64 ALL hash to bucket[0] no matter the capacity
+            hs = new SimHashSet(true);
+            hs.capacity = 64;
+            hs.buckets = new Array(64).fill(null).map(() => ({ type: 'list', items: [] }));
             renderBuckets();
-            await sleep(60);
+
+            // 10 values that all go to bucket[0] (multiples of 64, mod 64 = 0)
+            const collisionVals = [0, 64, 128, 192, 256, 320, 384, 448, 512, 576];
+            // A few normal values to show contrast
+            const normalVals = [1, 17, 33];
+            const allVals = [...collisionVals, ...normalVals];
+
+            logMsg(`Collision Demo: Loading ${allVals.length} elements — ${collisionVals.length} will ALL collide in bucket[0]!`, 'info');
+
+            for (const v of allVals) {
+                const result = hs.add(v);
+                const idx = result.rehashed ? hs._bucketIdx(v) : result.idx;
+                showHash(v, idx);
+                
+                if (result.rehashed) {
+                    rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}`;
+                    rehashOverlay.classList.add('active');
+                    logMsg(`Rehash! ${result.oldCap} → ${result.newCap}`, 'rehash');
+                    await sleep(d);
+                    rehashOverlay.classList.remove('active');
+                    const newIdx = hs._bucketIdx(v);
+                    showHash(v, newIdx);
+                    renderBuckets(newIdx, 'target', v);
+                } else {
+                    renderBuckets(idx, 'target', v);
+                }
+                
+                if (result.treeified) {
+                    logMsg(`🌲 TREEIFIED! bucket[${idx}] chain > ${TREEIFY_THRESHOLD} → Red-Black Tree!`, 'tree');
+                    setInfo(`🌲 <strong>Treeified!</strong> bucket[<strong>${idx}</strong>] exceeded ${TREEIFY_THRESHOLD} nodes → <strong style="color:var(--rbt-red)">Red-Black Tree</strong>!`, 'tree');
+                    await sleep(d * 1.2);
+                }
+                logMsg(`add(${v}) → bucket[${idx}]${result.chainLen > 1 ? ` (chain: ${result.chainLen})` : ''}`, 'add');
+                await sleep(d * 0.4);
+                renderBuckets();
+                await sleep(60);
+            }
+            setInfo(`✅ Collision Demo loaded! <strong>bucket[0]</strong> has <strong>${hs.buckets[0].items.length}</strong> elements chained together${hs.buckets[0].type === 'tree' ? ' as a <strong style="color:var(--rbt-red)">Red-Black Tree</strong> (O(log n) lookup!)' : ''}. Other buckets have 1 element each. This shows why same hashCode → O(n) degrades!`, 'add');
+        } else {
+            // Normal demo
+            const vals = [5, 21, 37, 12, 8, 28, 15, 42, 3, 19, 50, 71, 4];
+            logMsg(`Loading: add(${vals.join(', ')})`, 'info');
+            for (const v of vals) {
+                const result = hs.add(v);
+                const idx = result.rehashed ? hs._bucketIdx(v) : result.idx;
+                showHash(v, idx);
+                if (result.rehashed) {
+                    rehashText.textContent = `Capacity: ${result.oldCap} → ${result.newCap}`;
+                    rehashOverlay.classList.add('active');
+                    logMsg(`Rehash! ${result.oldCap} → ${result.newCap}`, 'rehash');
+                    await sleep(d);
+                    rehashOverlay.classList.remove('active');
+                    showHash(v, hs._bucketIdx(v));
+                    renderBuckets(hs._bucketIdx(v), 'target', v);
+                } else {
+                    renderBuckets(idx, 'target', v);
+                }
+                logMsg(`add(${v}) → bucket[${idx}]`, 'add');
+                await sleep(d * 0.4);
+                renderBuckets();
+                await sleep(60);
+            }
+            setInfo(`✅ Loaded: {${hs.allElements().join(', ')}}. Try <strong>contains(21)</strong> or <strong>add(5)</strong> for duplicate check!`, 'add');
         }
-        setInfo(`✅ Loaded: {${hs.allElements().join(', ')}}. Try <strong>contains(21)</strong> or <strong>add(5)</strong> for duplicate check!`, 'add');
         renderBuckets(); setAnimating(false);
     }
+
+    /* Collision mode toggle */
+    collisionSwitch.addEventListener('change', () => {
+        collisionMode = collisionSwitch.checked;
+        hs = new SimHashSet(collisionMode);
+        hashDisplay.innerHTML = '<span class="op">Ready — hash computation will appear here</span>';
+        renderBuckets();
+        if (collisionMode) {
+            collisionInfo.innerHTML = `ON — <strong>Collision mode active!</strong> Elements differing by capacity will collide into the same bucket. Click <strong>"Load Example"</strong> to see bucket collisions, separate chaining, and <strong>treeification (>8 nodes → Red-Black Tree)</strong>.`;
+            logMsg('Collision Demo Mode ON — chaining & treeification enabled', 'tree');
+            setInfo('⚡ <strong>Collision Demo Mode</strong> enabled! Click <strong>Load Example</strong> to see bucket collisions, or manually add elements like 0, 16, 32, 48... (they all go to the same bucket).', 'tree');
+        } else {
+            collisionInfo.innerHTML = `OFF — Normal mode. Each element goes to its own bucket. Toggle ON to see <strong>bucket collisions</strong>, separate chaining, and <strong>Java 8+ treeification</strong> (>8 nodes → Red-Black Tree).`;
+            logMsg('Collision Demo Mode OFF — normal distribution', 'info');
+            setInfo('ℹ️ Normal mode. Elements are distributed evenly across buckets.', '');
+        }
+    });
 
     /* Events */
     decBtn.addEventListener('click',()=>{const v=parseInt(valueInput.value)||0;valueInput.value=v-1});

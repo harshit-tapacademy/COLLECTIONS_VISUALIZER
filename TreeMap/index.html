@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='j' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23f89820'/%3E%3Cstop offset='1' stop-color='%23e25303'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M24 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M32 4c0 0 -4 12 8 16s12 12 4 20' fill='none' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M12 30h34v8c0 14-34 14-34 0z' fill='url(%23j)'/%3E%3Cpath d='M46 33h6c6 0 6 10 0 10h-6' fill='none' stroke='url(%23j)' stroke-width='3'/%3E%3Cpath d='M8 52h48' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M14 56h36' stroke='url(%23j)' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TreeMap Visualizer — Red-Black Tree Key-Value Store</title>
+    <meta name="description" content="Interactive TreeMap visualizer for Java. See Red-Black Tree with key-value pairs, sorted iteration, floor/ceiling operations, and balancing rotations.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+:root{
+    --bg-primary:#000;--bg-secondary:#0a0a0a;--bg-panel:#0d0d0d;
+    --border:rgba(255,255,255,0.06);--border-subtle:rgba(255,255,255,0.04);--border-glow:rgba(255,255,255,0.12);
+    --text-primary:#f0f0f0;--text-secondary:#8a8a8a;--text-muted:#555;
+    --accent-green:#4cff91;--accent-green-bg:rgba(76,255,145,0.10);
+    --accent-red:#ff5252;--accent-red-bg:rgba(255,82,82,0.08);
+    --accent-blue:#448aff;--accent-blue-bg:rgba(68,138,255,0.08);
+    --accent-amber:#ffc107;--accent-amber-bg:rgba(255,193,7,0.08);
+    --accent-purple:#b388ff;--accent-purple-bg:rgba(179,136,255,0.08);
+    --accent-cyan:#18ffff;--accent-cyan-bg:rgba(24,255,255,0.08);
+    --accent-teal:#64ffda;--accent-orange:#ff9100;
+    --rbt-red:#e53935;--rbt-red-glow:0 0 18px rgba(229,57,53,0.4);
+    --rbt-black:#333;--rbt-black-border:rgba(255,255,255,0.15);
+    --radius-sm:8px;--radius-md:12px;--radius-lg:16px;--radius-xl:20px;--radius-full:999px;
+    --shadow-md:0 4px 16px rgba(0,0,0,0.6);
+    --font:'Inter',-apple-system,sans-serif;--font-mono:'JetBrains Mono','Fira Code',monospace;
+    --transition:0.25s cubic-bezier(0.4,0,0.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg-primary);color:var(--text-primary);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.app{max-width:1440px;margin:0 auto;padding:20px 24px;display:flex;flex-direction:column;gap:16px}
+
+.header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);flex-wrap:wrap;gap:16px;backdrop-filter:blur(20px)}
+.header-left{display:flex;align-items:center;gap:16px}
+.logo-icon{width:48px;height:48px;border-radius:var(--radius-md);background:linear-gradient(135deg,#4caf50,var(--accent-teal));display:flex;align-items:center;justify-content:center;color:#000;box-shadow:0 0 24px rgba(76,175,80,0.3);transition:transform var(--transition)}
+.logo-icon:hover{transform:scale(1.08) rotate(-3deg)}
+.header h1{font-size:1.35rem;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#fff,#888);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{font-size:0.72rem;color:var(--text-muted);font-weight:500;margin-top:3px}
+.header-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.formula-badge{display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:var(--radius-full);font-size:0.72rem;transition:all var(--transition)}
+.formula-badge:hover{background:rgba(255,255,255,0.06);border-color:var(--border-glow)}
+.formula-label{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.58rem;letter-spacing:0.1em}
+.formula-badge code{font-family:var(--font-mono);color:var(--accent-cyan);font-weight:600;font-size:0.72rem}
+
+.controls-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);gap:14px;flex-wrap:wrap;backdrop-filter:blur(20px)}
+.controls-left,.controls-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.input-group{display:flex;align-items:center;gap:0}
+.input-field{padding:9px 12px;background:var(--bg-secondary);border:1px solid var(--border);color:var(--text-primary);font-family:var(--font-mono);font-size:0.85rem;font-weight:600;outline:none;text-align:center;transition:border-color var(--transition);width:80px}
+.input-field:focus{border-color:var(--accent-blue)}
+.input-field::placeholder{color:var(--text-muted);font-weight:400;font-size:0.72rem}
+.input-field:first-child{border-radius:var(--radius-sm) 0 0 var(--radius-sm)}
+.input-field:nth-child(2){border-left:none;border-radius:0}
+.input-field::-webkit-outer-spin-button,.input-field::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.input-field[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;font-family:var(--font);font-size:0.78rem;font-weight:600;border:1px solid transparent;border-radius:var(--radius-sm);cursor:pointer;transition:all var(--transition);white-space:nowrap;position:relative;overflow:hidden}
+.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,0.06) 0%,transparent 100%);pointer-events:none;opacity:0;transition:opacity var(--transition)}
+.btn:hover::after{opacity:1}
+.btn:active{transform:scale(0.96)}
+.btn:disabled{opacity:0.3;cursor:not-allowed;pointer-events:none}
+.btn-put{background:var(--accent-green);color:#000;font-weight:700;border-radius:0 var(--radius-sm) var(--radius-sm) 0}
+.btn-put:hover{box-shadow:0 0 20px rgba(76,255,145,0.25)}
+.btn-remove{background:var(--accent-red-bg);color:var(--accent-red);border:1px solid rgba(255,82,82,0.2)}
+.btn-remove:hover{box-shadow:0 0 20px rgba(255,82,82,0.25)}
+.btn-get{background:var(--accent-amber-bg);color:var(--accent-amber);border:1px solid rgba(255,193,7,0.2)}
+.btn-get:hover{box-shadow:0 0 20px rgba(255,193,7,0.25)}
+.btn-nav{background:var(--accent-purple-bg);color:var(--accent-purple);border:1px solid rgba(179,136,255,0.2)}
+.btn-nav:hover{background:rgba(179,136,255,0.18);box-shadow:0 0 24px rgba(179,136,255,0.25)}
+.btn-clear{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border)}
+.btn-clear:hover{color:var(--text-secondary);background:rgba(255,255,255,0.06)}
+.btn-sample{background:linear-gradient(135deg,#4caf50,var(--accent-teal));color:#000;padding:9px 18px;font-weight:700}
+.btn-sample:hover{box-shadow:0 0 24px rgba(76,175,80,0.3);filter:brightness(1.15)}
+.btn-clear-log{background:rgba(255,255,255,0.03);color:var(--text-muted);border:1px solid var(--border);padding:5px 12px;font-size:0.7rem}
+.speed-control{display:flex;align-items:center;gap:7px}
+.speed-control label{font-size:0.7rem;color:var(--text-muted);font-weight:600}
+.speed-control input[type="range"]{width:64px;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.08);border-radius:2px;outline:none}
+.speed-control input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent-blue);cursor:pointer;box-shadow:0 0 8px rgba(68,138,255,0.4)}
+
+.panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border-subtle);background:rgba(255,255,255,0.01);flex-wrap:wrap;gap:8px}
+.panel-header h2{font-size:0.82rem;font-weight:700;color:var(--text-secondary)}
+.badge{font-size:0.68rem;font-weight:600;padding:4px 12px;border-radius:var(--radius-full);border:1px solid}
+.badge-blue{background:var(--accent-blue-bg);color:var(--accent-blue);border-color:rgba(68,138,255,0.15)}
+.badge-red{background:rgba(229,57,53,0.1);color:#ef5350;border-color:rgba(229,57,53,0.2)}
+.badge-green{background:var(--accent-green-bg);color:var(--accent-green);border-color:rgba(76,255,145,0.15)}
+.legend{display:flex;align-items:center;gap:12px;font-size:0.68rem;color:var(--text-muted)}
+.legend-dot{width:14px;height:14px;border-radius:50%;display:inline-block;vertical-align:middle;margin-right:4px}
+.legend-dot.red{background:var(--rbt-red);box-shadow:0 0 8px rgba(229,57,53,0.3)}
+.legend-dot.black{background:var(--rbt-black);border:1.5px solid var(--rbt-black-border)}
+
+/* Tree View */
+.tree-panel{min-height:380px}
+.tree-container{position:relative;width:100%;min-height:340px;padding:24px;overflow:auto}
+.tree-svg{position:absolute;top:24px;left:24px;width:calc(100% - 48px);height:calc(100% - 48px);pointer-events:none;overflow:visible}
+.tree-svg path{fill:none;stroke:rgba(255,255,255,0.10);stroke-width:2;transition:all 0.4s ease}
+.tree-svg path.hl{stroke:var(--accent-amber);stroke-width:2.5;filter:drop-shadow(0 0 6px rgba(255,193,7,0.5))}
+.tree-nodes{position:relative;width:100%;height:100%}
+.tree-node{position:absolute;display:flex;flex-direction:column;align-items:center;gap:2px;transition:all 0.5s cubic-bezier(0.34,1.56,0.64,1);z-index:2}
+.node-circle{width:56px;height:56px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:0.72rem;font-weight:700;transition:all 0.3s ease;cursor:default;gap:1px;line-height:1.2}
+.node-circle .nk{font-size:0.75rem;font-weight:800}
+.node-circle .nv{font-size:0.58rem;opacity:0.8}
+.node-circle.rb-red{background:var(--rbt-red);color:#fff;border:2.5px solid rgba(229,57,53,0.5);box-shadow:var(--rbt-red-glow)}
+.node-circle.rb-black{background:var(--rbt-black);color:#eee;border:2.5px solid var(--rbt-black-border);box-shadow:var(--shadow-md)}
+.node-circle.hl-search{animation:searchPulse .6s ease infinite;box-shadow:0 0 24px rgba(255,193,7,0.5)!important;border-color:var(--accent-amber)!important}
+.node-circle.hl-found{animation:foundPop .4s ease;box-shadow:0 0 28px rgba(76,255,145,0.5)!important;border-color:var(--accent-green)!important}
+.node-circle.hl-insert{animation:popIn .4s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 0 24px rgba(76,255,145,0.4)!important;border-color:var(--accent-green)!important}
+.node-circle.hl-remove{box-shadow:0 0 24px rgba(255,82,82,0.5)!important;border-color:var(--accent-red)!important;opacity:0.6}
+@keyframes searchPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes foundPop{0%{transform:scale(0.8)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes popIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.2)}100%{transform:scale(1);opacity:1}}
+.empty-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-muted);font-size:0.85rem}
+.empty-state .hint{font-size:0.72rem;opacity:0.5}
+.empty-state.hidden{display:none}
+
+/* Sorted Map View */
+.sorted-container{padding:14px 20px;display:flex;align-items:center;gap:4px;overflow-x:auto;min-height:60px;flex-wrap:wrap}
+.sorted-cell{padding:6px 12px;border-radius:var(--radius-sm);font-family:var(--font-mono);font-size:0.78rem;font-weight:700;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:var(--text-primary);transition:all 0.3s ease;display:flex;flex-direction:column;align-items:center;gap:2px}
+.sorted-cell .sk{color:var(--accent-amber);font-size:0.72rem}
+.sorted-cell .sv{color:var(--accent-cyan);font-size:0.68rem}
+.sorted-cell.hl{border-color:var(--accent-green);background:var(--accent-green-bg);color:var(--accent-green)}
+.sorted-arrow{color:var(--text-muted);font-size:0.7rem;opacity:0.4}
+
+.info-bar{display:flex;align-items:center;gap:12px;padding:12px 20px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-md);font-size:0.8rem;color:var(--text-secondary);min-height:48px;transition:all 0.3s ease;backdrop-filter:blur(20px)}
+.info-bar.action-add{border-color:rgba(76,255,145,0.2);background:rgba(76,255,145,0.03)}
+.info-bar.action-remove{border-color:rgba(255,82,82,0.2);background:rgba(255,82,82,0.03)}
+.info-bar.action-search{border-color:rgba(255,193,7,0.2);background:rgba(255,193,7,0.03)}
+.info-bar.action-nav{border-color:rgba(179,136,255,0.2);background:rgba(179,136,255,0.03)}
+.info-text{font-weight:500;line-height:1.5}
+.info-text strong{color:var(--text-primary);font-weight:700}
+
+.log-panel{max-height:220px}
+.log-container{padding:10px 16px;max-height:160px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+.log-container::-webkit-scrollbar{width:3px}
+.log-container::-webkit-scrollbar-track{background:transparent}
+.log-container::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.08);border-radius:2px}
+.log-entry{font-family:var(--font-mono);font-size:0.68rem;padding:4px 10px;border-radius:var(--radius-sm);line-height:1.6}
+.log-entry.log-add{color:var(--accent-green);background:var(--accent-green-bg)}
+.log-entry.log-remove{color:var(--accent-red);background:var(--accent-red-bg)}
+.log-entry.log-search{color:var(--accent-amber);background:var(--accent-amber-bg)}
+.log-entry.log-nav{color:var(--accent-purple);background:var(--accent-purple-bg)}
+.log-entry.log-info{color:var(--text-muted)}
+
+/* Theory Section */
+.theory-section{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;backdrop-filter:blur(20px)}
+.theory-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;cursor:pointer;background:none;border:none;color:var(--text-primary);font-family:var(--font);transition:background var(--transition)}
+.theory-toggle:hover{background:rgba(255,255,255,0.02)}
+.theory-toggle h2{font-size:0.88rem;font-weight:700;display:flex;align-items:center;gap:10px;color:var(--text-secondary)}
+.theory-toggle h2 .accent{color:#4caf50}
+.toggle-chevron{width:20px;height:20px;color:var(--text-muted);transition:transform 0.3s ease}
+.theory-section.open .toggle-chevron{transform:rotate(180deg)}
+.theory-body{max-height:0;overflow:hidden;transition:max-height 0.5s cubic-bezier(0.4,0,0.2,1)}
+.theory-section.open .theory-body{max-height:4000px}
+.theory-inner{padding:0 24px 24px;display:flex;flex-direction:column;gap:20px}
+.theory-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:800px){.theory-grid{grid-template-columns:1fr}}
+.theory-card{background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;transition:border-color var(--transition)}
+.theory-card:hover{border-color:var(--border-glow)}
+.theory-card h3{font-size:0.82rem;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.theory-card h3 .icon{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:0.85rem;flex-shrink:0}
+.theory-card p,.theory-card li{font-size:0.76rem;color:var(--text-secondary);line-height:1.7}
+.theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
+.theory-full{grid-column:1/-1}
+.complexity-table{width:100%;border-collapse:collapse;margin-top:8px}
+.complexity-table th,.complexity-table td{padding:8px 12px;font-size:0.72rem;text-align:left;border-bottom:1px solid var(--border-subtle)}
+.complexity-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.62rem;letter-spacing:0.08em}
+.complexity-table td{font-family:var(--font-mono);color:var(--text-primary);font-weight:600}
+.complexity-table td:first-child{font-family:var(--font);color:var(--text-secondary)}
+.complexity-table .good{color:var(--accent-green)}
+.complexity-table .warn{color:var(--accent-amber)}
+
+@media(max-width:900px){.header,.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
+@media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.node-circle{width:44px;height:44px;font-size:0.65rem}.node-circle .nk{font-size:0.65rem}.node-circle .nv{font-size:0.52rem}}
+.home-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-secondary);font-size:0.72rem;font-weight:600;text-decoration:none;transition:all var(--transition)}
+.home-link:hover{background:rgba(255,255,255,0.08);color:var(--text-primary);border-color:var(--border-glow)}
+    </style>
+</head>
+<body>
+<div class="app">
+    <header class="header">
+        <div class="header-left">
+            <a href="../index.html" class="home-link" aria-label="Back to Home" title="Back to Home">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+                Home
+            </a>
+            <div class="logo-icon">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="5" r="3"/><line x1="12" y1="8" x2="12" y2="12"/>
+                    <circle cx="6" cy="16" r="3"/><circle cx="18" cy="16" r="3"/>
+                    <line x1="12" y1="12" x2="6" y2="13"/><line x1="12" y1="12" x2="18" y2="13"/>
+                </svg>
+            </div>
+            <div>
+                <h1>TreeMap Visualizer</h1>
+                <p class="subtitle">Java Collections — Red-Black Tree (Sorted Key-Value Map)</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="formula-badge"><span class="formula-label">Backed by</span><code>Red-Black Tree</code></div>
+            <div class="formula-badge"><span class="formula-label">All ops</span><code>O(log n)</code></div>
+            <div class="formula-badge"><span class="formula-label">Order</span><code>Natural / Comparator</code></div>
+        </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="controls-bar">
+        <div class="controls-left">
+            <div class="input-group">
+                <input type="number" id="keyInput" class="input-field" placeholder="key" min="-999" max="999">
+                <input type="text" id="valInput" class="input-field" placeholder="value" maxlength="10">
+                <button id="putBtn" class="btn btn-put">put(k,v)</button>
+            </div>
+            <button id="getBtn" class="btn btn-get">get(k)</button>
+            <button id="removeBtn" class="btn btn-remove">remove(k)</button>
+            <button id="firstKeyBtn" class="btn btn-nav">firstKey</button>
+            <button id="lastKeyBtn" class="btn btn-nav">lastKey</button>
+            <button id="floorKeyBtn" class="btn btn-nav">floorKey</button>
+            <button id="ceilingKeyBtn" class="btn btn-nav">ceilingKey</button>
+            <button id="clearBtn" class="btn btn-clear">Clear</button>
+        </div>
+        <div class="controls-right">
+            <button id="sampleBtn" class="btn btn-sample">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Load Example
+            </button>
+            <div class="speed-control"><label>Speed</label><input type="range" id="speedSlider" min="1" max="5" value="3" step="1"></div>
+        </div>
+    </div>
+
+    <!-- Theory Section -->
+    <div class="theory-section" id="theorySection">
+        <button class="theory-toggle" id="theoryToggle" type="button">
+            <h2>📖 <span class="accent">TreeMap Internals</span> — Red-Black Tree for Sorted Key-Value Storage</h2>
+            <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="theory-body">
+            <div class="theory-inner">
+                <div class="theory-grid">
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-green-bg);color:var(--accent-green)">🌲</span> Red-Black Tree</h3>
+                        <p style="margin-bottom:10px">TreeMap stores key-value pairs in a <strong>self-balancing Red-Black Tree</strong>:</p>
+                        <ul>
+                            <li>Keys are <strong>sorted</strong> by their natural ordering (Comparable) or a custom Comparator</li>
+                            <li>All operations are <code>O(log n)</code> — guaranteed by the balanced tree height</li>
+                            <li>In-order traversal gives keys in <strong>ascending sorted order</strong></li>
+                            <li>Unlike HashMap, TreeMap does NOT use hashing — it uses key <strong>comparisons</strong></li>
+                        </ul>
+                    </div>
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-purple-bg);color:var(--accent-purple)">🧭</span> NavigableMap Methods</h3>
+                        <p style="margin-bottom:10px">TreeMap implements <code>NavigableMap</code>, providing powerful navigation:</p>
+                        <ul>
+                            <li><code>firstKey()</code> / <code>lastKey()</code> — smallest / largest key</li>
+                            <li><code>floorKey(k)</code> — greatest key ≤ k</li>
+                            <li><code>ceilingKey(k)</code> — smallest key ≥ k</li>
+                            <li><code>lowerKey(k)</code> / <code>higherKey(k)</code> — strictly less/greater</li>
+                            <li><code>subMap()</code>, <code>headMap()</code>, <code>tailMap()</code> — range views</li>
+                        </ul>
+                    </div>
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:var(--accent-amber-bg);color:var(--accent-amber)">⚡</span> TreeMap vs HashMap vs LinkedHashMap</h3>
+                        <table class="complexity-table">
+                            <thead><tr><th>Feature</th><th>HashMap</th><th>LinkedHashMap</th><th>TreeMap</th></tr></thead>
+                            <tbody>
+                                <tr><td>Order</td><td>None</td><td>Insertion</td><td class="good">Sorted (keys)</td></tr>
+                                <tr><td>put/get/remove</td><td class="good">O(1)</td><td class="good">O(1)</td><td class="warn">O(log n)</td></tr>
+                                <tr><td>Null keys</td><td class="good">1 allowed</td><td class="good">1 allowed</td><td class="warn">Not allowed*</td></tr>
+                                <tr><td>Navigation</td><td>❌</td><td>❌</td><td class="good">floor/ceiling/sub</td></tr>
+                                <tr><td>Internal DS</td><td>Hash Table</td><td>Hash Table + DLL</td><td class="good">Red-Black Tree</td></tr>
+                            </tbody>
+                        </table>
+                        <p style="margin-top:8px;font-size:0.65rem;color:var(--text-muted)">* TreeMap with a Comparator that handles null can accept null keys, but it's not recommended.</p>
+                    </div>
+                    <div class="theory-card">
+                        <h3><span class="icon" style="background:rgba(255,145,0,0.1);color:#ff9100">☕</span> Java Caveats</h3>
+                        <ul>
+                            <li><strong>Keys must be Comparable</strong> or a Comparator must be provided at construction</li>
+                            <li><code>TreeSet</code> is backed by <code>TreeMap</code> (elements are keys with dummy values)</li>
+                            <li><strong>Not thread-safe:</strong> use <code>Collections.synchronizedSortedMap()</code> or <code>ConcurrentSkipListMap</code></li>
+                            <li>Use when you need <strong>sorted iteration</strong> or <strong>range queries</strong> (subMap, headMap, tailMap)</li>
+                            <li><strong>Slower than HashMap</strong> for simple get/put — only use when ordering matters</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tree View -->
+    <div class="panel tree-panel">
+        <div class="panel-header">
+            <h2>🌲 Red-Black Tree (Key → Value)</h2>
+            <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <div class="legend"><span class="legend-dot red"></span>Red <span class="legend-dot black"></span>Black</div>
+                <span class="badge badge-blue" id="sizeLabel">Size: 0</span>
+                <span class="badge badge-red" id="heightLabel">Height: 0</span>
+            </div>
+        </div>
+        <div class="tree-container" id="treeContainer">
+            <svg id="treeSvg" class="tree-svg"></svg>
+            <div id="treeNodes" class="tree-nodes"></div>
+            <div class="empty-state" id="emptyState">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.4">
+                    <circle cx="12" cy="6" r="3"/><line x1="12" y1="9" x2="12" y2="13"/>
+                    <circle cx="7" cy="17" r="3"/><circle cx="17" cy="17" r="3"/>
+                </svg>
+                <p>Add key-value pairs to visualize the TreeMap</p>
+                <p class="hint">Or click <strong>"Load Example"</strong> for a demo</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sorted Map View -->
+    <div class="panel">
+        <div class="panel-header">
+            <h2>📊 Sorted Map View (In-Order: key → value)</h2>
+            <code style="font-family:var(--font-mono);font-size:0.62rem;color:var(--text-muted);padding:4px 10px;background:rgba(255,255,255,0.03);border-radius:var(--radius-sm);border:1px solid var(--border)">for (Map.Entry e : treeMap.entrySet()) → sorted by key</code>
+        </div>
+        <div class="sorted-container" id="sortedContainer">
+            <span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem">{ empty }</span>
+        </div>
+    </div>
+
+    <!-- Info Bar -->
+    <div class="info-bar" id="infoBar">
+        <div>ℹ️</div>
+        <div class="info-text" id="infoText">Ready. Add key-value pairs or load the example.</div>
+    </div>
+
+    <!-- Log -->
+    <div class="panel log-panel">
+        <div class="panel-header">
+            <h2>📋 Operation Log</h2>
+            <button id="clearLogBtn" class="btn btn-clear-log">Clear</button>
+        </div>
+        <div class="log-container" id="logContainer">
+            <div class="log-entry log-info">Visualizer ready. TreeMap backed by Red-Black Tree — sorted key-value storage.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ===== Red-Black Tree with Key-Value ===== */
+const RED = true, BLACK = false;
+class RBNode {
+    constructor(key, val, color = RED) { this.key = key; this.val = val; this.color = color; this.left = null; this.right = null; this.parent = null; }
+}
+
+class RBTreeMap {
+    constructor() { this.root = null; this._size = 0; }
+    get size() { return this._size; }
+    get isEmpty() { return this._size === 0; }
+
+    _isRed(n) { return n !== null && n.color === RED; }
+    _rotateLeft(x) {
+        const y = x.right; x.right = y.left;
+        if (y.left) y.left.parent = x;
+        y.parent = x.parent;
+        if (!x.parent) this.root = y;
+        else if (x === x.parent.left) x.parent.left = y;
+        else x.parent.right = y;
+        y.left = x; x.parent = y;
+    }
+    _rotateRight(x) {
+        const y = x.left; x.left = y.right;
+        if (y.right) y.right.parent = x;
+        y.parent = x.parent;
+        if (!x.parent) this.root = y;
+        else if (x === x.parent.right) x.parent.right = y;
+        else x.parent.left = y;
+        y.right = x; x.parent = y;
+    }
+
+    put(key, val) {
+        const path = [];
+        const n = new RBNode(key, val, RED);
+        if (!this.root) { this.root = n; n.color = BLACK; this._size++; return { path: [key], updated: false, duplicate: false }; }
+        let cur = this.root, par = null;
+        while (cur) {
+            path.push(cur.key);
+            par = cur;
+            if (key < cur.key) cur = cur.left;
+            else if (key > cur.key) cur = cur.right;
+            else { const old = cur.val; cur.val = val; return { path, updated: true, oldVal: old, duplicate: true }; }
+        }
+        n.parent = par;
+        if (key < par.key) par.left = n; else par.right = n;
+        this._size++;
+        this._fixInsert(n);
+        return { path, updated: false, duplicate: false };
+    }
+
+    _fixInsert(z) {
+        while (z.parent && z.parent.color === RED) {
+            const gp = z.parent.parent;
+            if (!gp) break;
+            if (z.parent === gp.left) {
+                const uncle = gp.right;
+                if (this._isRed(uncle)) { z.parent.color = BLACK; uncle.color = BLACK; gp.color = RED; z = gp; }
+                else { if (z === z.parent.right) { z = z.parent; this._rotateLeft(z); } z.parent.color = BLACK; gp.color = RED; this._rotateRight(gp); }
+            } else {
+                const uncle = gp.left;
+                if (this._isRed(uncle)) { z.parent.color = BLACK; uncle.color = BLACK; gp.color = RED; z = gp; }
+                else { if (z === z.parent.left) { z = z.parent; this._rotateRight(z); } z.parent.color = BLACK; gp.color = RED; this._rotateLeft(gp); }
+            }
+        }
+        this.root.color = BLACK;
+    }
+
+    _transplant(u, v) { if (!u.parent) this.root = v; else if (u === u.parent.left) u.parent.left = v; else u.parent.right = v; if (v) v.parent = u.parent; }
+    _minimum(n) { while (n.left) n = n.left; return n; }
+    _maximum(n) { while (n.right) n = n.right; return n; }
+
+    get(key) { const path = []; let n = this.root; while (n) { path.push(n.key); if (key < n.key) n = n.left; else if (key > n.key) n = n.right; else return { found: true, val: n.val, path }; } return { found: false, path }; }
+
+    remove(key) {
+        const path = [];
+        let z = this.root;
+        while (z) { path.push(z.key); if (key < z.key) z = z.left; else if (key > z.key) z = z.right; else break; }
+        if (!z) return { found: false, path };
+        const removedVal = z.val;
+        let y = z, yOrigColor = y.color, x;
+        if (!z.left) { x = z.right; this._transplant(z, z.right); }
+        else if (!z.right) { x = z.left; this._transplant(z, z.left); }
+        else {
+            y = this._minimum(z.right); yOrigColor = y.color; x = y.right;
+            if (y.parent === z) { if (x) x.parent = y; }
+            else { this._transplant(y, y.right); y.right = z.right; if (y.right) y.right.parent = y; }
+            this._transplant(z, y); y.left = z.left; if (y.left) y.left.parent = y; y.color = z.color;
+        }
+        this._size--;
+        if (yOrigColor === BLACK && x) this._fixDelete(x);
+        if (this.root) this.root.color = BLACK;
+        return { found: true, val: removedVal, path };
+    }
+
+    _fixDelete(x) {
+        while (x !== this.root && x && x.color === BLACK) {
+            if (x === x.parent?.left) {
+                let w = x.parent.right; if (!w) break;
+                if (this._isRed(w)) { w.color = BLACK; x.parent.color = RED; this._rotateLeft(x.parent); w = x.parent.right; }
+                if (w && !this._isRed(w.left) && !this._isRed(w.right)) { w.color = RED; x = x.parent; }
+                else { if (w && !this._isRed(w.right)) { if (w.left) w.left.color = BLACK; w.color = RED; this._rotateRight(w); w = x.parent.right; } if (w) { w.color = x.parent.color; x.parent.color = BLACK; if (w.right) w.right.color = BLACK; this._rotateLeft(x.parent); } x = this.root; }
+            } else {
+                let w = x.parent?.left; if (!w) break;
+                if (this._isRed(w)) { w.color = BLACK; x.parent.color = RED; this._rotateRight(x.parent); w = x.parent.left; }
+                if (w && !this._isRed(w.right) && !this._isRed(w.left)) { w.color = RED; x = x.parent; }
+                else { if (w && !this._isRed(w.left)) { if (w.right) w.right.color = BLACK; w.color = RED; this._rotateLeft(w); w = x.parent.left; } if (w) { w.color = x.parent.color; x.parent.color = BLACK; if (w.left) w.left.color = BLACK; this._rotateRight(x.parent); } x = this.root; }
+            }
+        }
+        if (x) x.color = BLACK;
+    }
+
+    firstKey() { if (!this.root) return null; return this._minimum(this.root).key; }
+    lastKey() { if (!this.root) return null; return this._maximum(this.root).key; }
+    floorKey(key) { let res = null, n = this.root; while (n) { if (key === n.key) return n.key; if (key < n.key) n = n.left; else { res = n.key; n = n.right; } } return res; }
+    ceilingKey(key) { let res = null, n = this.root; while (n) { if (key === n.key) return n.key; if (key > n.key) n = n.right; else { res = n.key; n = n.left; } } return res; }
+    height(n = this.root) { if (!n) return 0; return 1 + Math.max(this.height(n.left), this.height(n.right)); }
+    inOrder(n = this.root, arr = []) { if (!n) return arr; this.inOrder(n.left, arr); arr.push({ key: n.key, val: n.val }); this.inOrder(n.right, arr); return arr; }
+    getNode(key) { let n = this.root; while (n) { if (key < n.key) n = n.left; else if (key > n.key) n = n.right; else return n; } return null; }
+    clear() { this.root = null; this._size = 0; }
+}
+
+/* ===== Visualizer ===== */
+(function() {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const keyInput=$('keyInput'),valInput=$('valInput');
+    const putBtn=$('putBtn'),getBtn=$('getBtn'),removeBtn=$('removeBtn');
+    const firstKeyBtn=$('firstKeyBtn'),lastKeyBtn=$('lastKeyBtn'),floorKeyBtn=$('floorKeyBtn'),ceilingKeyBtn=$('ceilingKeyBtn');
+    const clearBtn=$('clearBtn'),sampleBtn=$('sampleBtn'),clearLogBtn=$('clearLogBtn'),speedSlider=$('speedSlider');
+    const treeContainer=$('treeContainer'),treeSvg=$('treeSvg'),treeNodes=$('treeNodes'),emptyState=$('emptyState');
+    const sortedContainer=$('sortedContainer'),infoBar=$('infoBar'),infoText=$('infoText');
+    const logContainer=$('logContainer'),sizeLabel=$('sizeLabel'),heightLabel=$('heightLabel');
+    const allBtns=[putBtn,getBtn,removeBtn,firstKeyBtn,lastKeyBtn,floorKeyBtn,ceilingKeyBtn,clearBtn,sampleBtn];
+
+    let tm = new RBTreeMap();
+    let animating = false;
+
+    function getDelay(){const s=[1200,800,550,350,200];return s[parseInt(speedSlider.value)-1]||550}
+    function setAnimating(v){animating=v;allBtns.forEach(b=>b.disabled=v);updateBtns()}
+    function updateBtns(){[getBtn,removeBtn,firstKeyBtn,lastKeyBtn,floorKeyBtn,ceilingKeyBtn].forEach(b=>b.disabled=animating||tm.isEmpty)}
+    function logMsg(msg,type='info'){const e=document.createElement('div');e.className=`log-entry log-${type}`;const t=new Date().toLocaleTimeString('en-US',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});e.textContent=`[${t}] ${msg}`;logContainer.appendChild(e);logContainer.scrollTop=logContainer.scrollHeight}
+    function setInfo(msg,cls=''){infoText.innerHTML=msg;infoBar.className='info-bar'+(cls?` action-${cls}`:'')}
+    function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
+
+    /* Tree Layout */
+    function layoutTree(node, depth, left, right, positions) {
+        if (!node) return;
+        const x = (left + right) / 2;
+        const y = 36 + depth * 85;
+        positions.push({ x, y, key: node.key, val: node.val, color: node.color });
+        layoutTree(node.left, depth + 1, left, x, positions);
+        layoutTree(node.right, depth + 1, x, right, positions);
+    }
+    function getPositions() {
+        const positions = [];
+        const w = treeContainer.clientWidth - 48;
+        layoutTree(tm.root, 0, 0, w, positions);
+        return positions;
+    }
+    function getEdges(node, positions) {
+        const edges = [];
+        function walk(n) {
+            if (!n) return;
+            const pPos = positions.find(p => p.key === n.key);
+            if (n.left) { const cPos = positions.find(p => p.key === n.left.key); if (pPos && cPos) edges.push([pPos, cPos]); walk(n.left); }
+            if (n.right) { const cPos = positions.find(p => p.key === n.right.key); if (pPos && cPos) edges.push([pPos, cPos]); walk(n.right); }
+        }
+        walk(node);
+        return edges;
+    }
+
+    function renderTree(hlSet = new Set(), hlType = '') {
+        const pos = getPositions();
+        if (!pos.length) { emptyState.classList.remove('hidden'); treeNodes.innerHTML=''; treeSvg.innerHTML=''; treeContainer.style.minHeight='340px'; return; }
+        emptyState.classList.add('hidden');
+        const maxY = Math.max(...pos.map(p => p.y));
+        treeContainer.style.minHeight = Math.max(340, maxY + 90) + 'px';
+        const edges = getEdges(tm.root, pos);
+        const R = 28;
+        let svg = '';
+        for (const [p, c] of edges) {
+            const dx = c.x-p.x, dy = c.y-p.y, d = Math.sqrt(dx*dx+dy*dy);
+            if (d === 0) continue;
+            const ux=dx/d, uy=dy/d;
+            const sx=p.x+ux*R, sy=p.y+uy*R, ex=c.x-ux*R, ey=c.y-uy*R;
+            const isHl = hlSet.has(p.key) && hlSet.has(c.key);
+            svg += `<path d="M${sx.toFixed(1)},${sy.toFixed(1)} L${ex.toFixed(1)},${ey.toFixed(1)}" class="${isHl?'hl':''}"/>`;
+        }
+        treeSvg.innerHTML = svg;
+        let html = '';
+        for (const p of pos) {
+            const colorCls = p.color === RED ? 'rb-red' : 'rb-black';
+            let extraCls = '';
+            if (hlSet.has(p.key)) {
+                if (hlType === 'search') extraCls = 'hl-search';
+                else if (hlType === 'found') extraCls = 'hl-found';
+                else if (hlType === 'insert') extraCls = 'hl-insert';
+                else if (hlType === 'remove') extraCls = 'hl-remove';
+            }
+            html += `<div class="tree-node" style="left:${p.x-R}px;top:${p.y-R}px"><div class="node-circle ${colorCls} ${extraCls}"><span class="nk">${p.key}</span><span class="nv">${p.val}</span></div></div>`;
+        }
+        treeNodes.innerHTML = html;
+    }
+
+    function renderSorted(hlKey = null) {
+        const arr = tm.inOrder();
+        if (!arr.length) { sortedContainer.innerHTML = '<span style="color:var(--text-muted);font-family:var(--font-mono);font-size:0.78rem">{ empty }</span>'; return; }
+        let html = '';
+        for (let i = 0; i < arr.length; i++) {
+            if (i > 0) html += '<span class="sorted-arrow">→</span>';
+            html += `<span class="sorted-cell ${arr[i].key===hlKey?'hl':''}"><span class="sk">${arr[i].key}</span><span class="sv">${arr[i].val}</span></span>`;
+        }
+        sortedContainer.innerHTML = html;
+    }
+
+    function fullRender(hl = new Set(), hlType = '', hlSorted = null) {
+        renderTree(hl, hlType);
+        renderSorted(hlSorted);
+        sizeLabel.textContent = `Size: ${tm.size}`;
+        heightLabel.textContent = `Height: ${tm.height()}`;
+        updateBtns();
+    }
+
+    function getKey() { const v = parseInt(keyInput.value); if (isNaN(v)) { setInfo('⚠️ Enter a valid integer key.', ''); return null; } return v; }
+    function getVal2() { return valInput.value.trim() || 'v' + keyInput.value; }
+
+    /* Operations */
+    async function handlePut() {
+        const k = getKey(); if (k === null) return;
+        const v = getVal2();
+        setAnimating(true);
+        const d = getDelay();
+        const { path, updated, oldVal, duplicate } = tm.put(k, v);
+        // Animate search
+        for (let i = 0; i < path.length; i++) {
+            fullRender(new Set(path.slice(0, i + 1)), 'search');
+            setInfo(`🔍 Searching for key <strong>${k}</strong>... comparing with <strong>${path[i]}</strong>`, 'add');
+            await sleep(d * 0.5);
+        }
+        if (duplicate) {
+            fullRender(new Set([k]), 'found', k);
+            setInfo(`🔄 <strong>put(${k}, "${v}")</strong> — Key exists. Updated value: "<strong>${oldVal}</strong>" → "<strong>${v}</strong>"`, 'add');
+            logMsg(`put(${k}, "${v}") → updated (was "${oldVal}")`, 'add');
+        } else {
+            fullRender(new Set([k]), 'insert', k);
+            setInfo(`✅ <strong>put(${k}, "${v}")</strong> — Inserted. Size: <strong>${tm.size}</strong>, Height: <strong>${tm.height()}</strong>`, 'add');
+            logMsg(`put(${k}, "${v}") → inserted. size=${tm.size}`, 'add');
+        }
+        await sleep(d);
+        fullRender(); keyInput.value=''; valInput.value=''; keyInput.focus(); setAnimating(false);
+    }
+
+    async function handleGet() {
+        const k = getKey(); if (k === null) return;
+        setAnimating(true);
+        const d = getDelay();
+        const { found, val, path } = tm.get(k);
+        for (let i = 0; i < path.length; i++) {
+            fullRender(new Set(path.slice(0, i + 1)), 'search');
+            const cmp = k < path[i] ? '→ go LEFT' : k > path[i] ? '→ go RIGHT' : '→ FOUND!';
+            setInfo(`🔍 get(${k}): comparing with <strong>${path[i]}</strong> ${cmp}`, 'search');
+            await sleep(d * 0.6);
+        }
+        if (found) {
+            logMsg(`get(${k}) → "${val}"`, 'search');
+            setInfo(`✅ <strong>get(${k})</strong> → "<strong>${val}</strong>". Found after ${path.length} comparison(s).`, 'search');
+            fullRender(new Set([k]), 'found', k);
+        } else {
+            logMsg(`get(${k}) → null`, 'search');
+            setInfo(`❌ <strong>get(${k})</strong> → <strong>null</strong>. Key not found.`, '');
+            fullRender();
+        }
+        await sleep(1200);
+        fullRender(); setAnimating(false);
+    }
+
+    async function handleRemove() {
+        const k = getKey(); if (k === null) return;
+        setAnimating(true);
+        const d = getDelay();
+        const res = tm.remove(k);
+        for (let i = 0; i < res.path.length; i++) {
+            fullRender(new Set(res.path.slice(0, i + 1)), 'search');
+            setInfo(`🔍 Searching for <strong>${k}</strong>... at node <strong>${res.path[i]}</strong>`, 'remove');
+            await sleep(d * 0.5);
+        }
+        if (!res.found) {
+            logMsg(`remove(${k}) → null (not found)`, 'info');
+            setInfo(`⚠️ <strong>remove(${k})</strong> — Key not found.`, '');
+            fullRender(); setAnimating(false); return;
+        }
+        fullRender(new Set([k]), 'remove');
+        await sleep(d);
+        logMsg(`remove(${k}) → "${res.val}". size=${tm.size}`, 'remove');
+        setInfo(`🗑️ <strong>remove(${k})</strong> → "<strong>${res.val}</strong>" removed. Size: <strong>${tm.size}</strong>`, 'remove');
+        fullRender(); setAnimating(false);
+    }
+
+    function handleFirstKey() {
+        if (tm.isEmpty) return;
+        const k = tm.firstKey();
+        const node = tm.getNode(k);
+        logMsg(`firstKey() → ${k} (value: "${node.val}")`, 'nav');
+        setInfo(`⬅️ <strong>firstKey()</strong> → <strong>${k}</strong> (value: "${node.val}") — smallest key. O(log n)`, 'nav');
+        fullRender(new Set([k]), 'found', k);
+    }
+    function handleLastKey() {
+        if (tm.isEmpty) return;
+        const k = tm.lastKey();
+        const node = tm.getNode(k);
+        logMsg(`lastKey() → ${k} (value: "${node.val}")`, 'nav');
+        setInfo(`➡️ <strong>lastKey()</strong> → <strong>${k}</strong> (value: "${node.val}") — largest key. O(log n)`, 'nav');
+        fullRender(new Set([k]), 'found', k);
+    }
+    function handleFloorKey() {
+        const k = getKey(); if (k === null) return;
+        const r = tm.floorKey(k);
+        logMsg(`floorKey(${k}) → ${r}`, 'nav');
+        if (r !== null) {
+            const node = tm.getNode(r);
+            setInfo(`⬇️ <strong>floorKey(${k})</strong> → <strong>${r}</strong> (value: "${node.val}") — greatest key ≤ ${k}`, 'nav');
+            fullRender(new Set([r]), 'found', r);
+        } else { setInfo(`⬇️ <strong>floorKey(${k})</strong> → <strong>null</strong> (no key ≤ ${k})`, ''); fullRender(); }
+    }
+    function handleCeilingKey() {
+        const k = getKey(); if (k === null) return;
+        const r = tm.ceilingKey(k);
+        logMsg(`ceilingKey(${k}) → ${r}`, 'nav');
+        if (r !== null) {
+            const node = tm.getNode(r);
+            setInfo(`⬆️ <strong>ceilingKey(${k})</strong> → <strong>${r}</strong> (value: "${node.val}") — smallest key ≥ ${k}`, 'nav');
+            fullRender(new Set([r]), 'found', r);
+        } else { setInfo(`⬆️ <strong>ceilingKey(${k})</strong> → <strong>null</strong> (no key ≥ ${k})`, ''); fullRender(); }
+    }
+
+    function handleClear() { tm.clear(); logMsg('clear()', 'info'); setInfo('🧹 TreeMap cleared.', ''); fullRender(); }
+
+    async function handleSample() {
+        tm = new RBTreeMap(); fullRender(); setAnimating(true);
+        const entries = [[50,'Delhi'],[30,'Mumbai'],[70,'Chennai'],[20,'Kolkata'],[40,'Bangalore'],[60,'Hyderabad'],[80,'Pune'],[10,'Jaipur'],[25,'Ahmedabad']];
+        logMsg(`Loading: [${entries.map(e=>e[0]).join(', ')}]`, 'info');
+        const d = getDelay();
+        for (const [k,v] of entries) {
+            tm.put(k, v);
+            fullRender(new Set([k]), 'insert', k);
+            logMsg(`put(${k}, "${v}")`, 'add');
+            await sleep(d * 0.5);
+            fullRender();
+            await sleep(100);
+        }
+        setInfo(`✅ Example loaded: {${tm.inOrder().map(e=>e.key+':'+e.val).join(', ')}}. Try <strong>get</strong>, <strong>floorKey</strong>, <strong>ceilingKey</strong>!`, 'add');
+        fullRender(); setAnimating(false);
+    }
+
+    /* Events */
+    keyInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !animating) { valInput.focus(); if (valInput.value.trim()) handlePut(); } });
+    valInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !animating) handlePut(); });
+    putBtn.addEventListener('click', handlePut);
+    getBtn.addEventListener('click', handleGet);
+    removeBtn.addEventListener('click', handleRemove);
+    firstKeyBtn.addEventListener('click', handleFirstKey);
+    lastKeyBtn.addEventListener('click', handleLastKey);
+    floorKeyBtn.addEventListener('click', handleFloorKey);
+    ceilingKeyBtn.addEventListener('click', handleCeilingKey);
+    clearBtn.addEventListener('click', handleClear);
+    sampleBtn.addEventListener('click', handleSample);
+    clearLogBtn.addEventListener('click', () => { logContainer.innerHTML = ''; logMsg('Log cleared.', 'info'); });
+    let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => fullRender(), 150); });
+
+    const theorySection = $('theorySection'), theoryToggle = $('theoryToggle');
+    theoryToggle.addEventListener('click', () => theorySection.classList.toggle('open'));
+
+    fullRender();
+})();
+</script>
+</body>
+</html>
