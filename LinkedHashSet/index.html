@@ -186,6 +186,14 @@ body{font-family:var(--font);background:var(--bg-primary);color:var(--text-prima
 .theory-card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px}
 .theory-card code{font-family:var(--font-mono);font-size:0.72rem;color:var(--accent-cyan);background:rgba(24,255,255,0.06);padding:1px 6px;border-radius:4px}
 .theory-full{grid-column:1/-1}
+.complexity-table{width:100%;border-collapse:collapse;margin-top:8px}
+.complexity-table th,.complexity-table td{padding:8px 12px;font-size:0.72rem;text-align:left;border-bottom:1px solid var(--border-subtle)}
+.complexity-table th{color:var(--text-muted);font-weight:600;text-transform:uppercase;font-size:0.62rem;letter-spacing:0.08em}
+.complexity-table td{font-family:var(--font-mono);color:var(--text-primary);font-weight:600}
+.complexity-table td:first-child{font-family:var(--font);color:var(--text-secondary)}
+.complexity-table .good{color:var(--accent-green)}
+.complexity-table .warn{color:var(--accent-amber)}
+.complexity-table .bad{color:var(--accent-red)}
 
 @media(max-width:900px){.header,.controls-bar{flex-direction:column;align-items:flex-start}.controls-left,.controls-right{width:100%}}
 @media(max-width:600px){.app{padding:12px 14px;gap:12px}.formula-badge{display:none}.bucket-col{min-width:56px}.bucket-slot{width:56px}.chain-node{font-size:0.7rem;padding:6px 2px}.order-node-box{padding:8px 10px;font-size:0.75rem}}
